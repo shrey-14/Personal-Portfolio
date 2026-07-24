@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         THE critical line for mobile. Without width=device-width, mobile Safari
+         and Chrome report window.innerWidth as ~980px (desktop-emulation width),
+         which made isMobile (w < 900) evaluate FALSE on phones — so the desktop
+         layout rendered, zoomed out, leaving ~60% of the screen empty.
+         viewport-fit=cover lets the layout extend under the notch/home indicator;
+         we pair it with env(safe-area-inset-*) padding in CSS.
+         
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5" />
+
+    <!-- Address-bar / status-bar tint on the real graphite surface (teal and
+         navy are retired from the palette). OSContext retargets this meta
+         live when the visitor switches theme in Display Properties. -->
+    <meta name="theme-color" content="#1b1e24" />
+
+    <meta name="description" content="SHREY/OS — Shrey Patel, MSc AI. A bootable-OS portfolio." />
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         Social share card (LinkedIn / Twitter). og:image MUST be an ABSOLUTE
+         URL — LinkedIn ignores relative paths and caches the result, so:
+           1. TODO(shrey): replace https://YOUR-DOMAIN.vercel.app with the real
+              deployed domain (all four occurrences below).
+           2. TODO(shrey): add /public/og/shreyos-og.png — a 1200×630 screenshot
+              of the fully-booted desktop (Paint window + taskbar + amber).
+           3. After deploying, refresh LinkedIn's cache at
+              linkedin.com/post-inspector.
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <meta property="og:type"         content="website" />
+    <meta property="og:title"        content="SHREY/OS — Shrey Patel · AI/ML Portfolio" />
+    <meta property="og:description"  content="A bootable Windows 95–style OS portfolio. MSc AI @ Brunel · built AI Radar (hybrid RAG intelligence platform) · seeking an AI/ML placement 2026–27." />
+    <meta property="og:url"          content="https://YOUR-DOMAIN.vercel.app/" />
+    <meta property="og:image"        content="https://YOUR-DOMAIN.vercel.app/og/shreyos-og.png" />
+    <meta property="og:image:width"  content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content="SHREY/OS — Shrey Patel" />
+    <meta name="twitter:description" content="Boot a Win95-style OS. Explore the disk archive. Hire the builder." />
+    <meta name="twitter:image"       content="https://YOUR-DOMAIN.vercel.app/og/shreyos-og.png" />
+
+    <!-- Favicon: the SHREY/OS pixel computer (amber), from the unified icon set.
+         File: /public/icon.svg -->
+    <!-- Fonts: discovered here in parallel instead of via CSS @import (which
+         hid them behind an HTML → JS → CSS request chain and caused FOUT
+         during the boot). The boot canvas draws with IBM Plex Mono. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Press+Start+2P&display=swap" />
+
+    <link rel="icon" type="image/svg+xml" href="/icons/os/32/app-terminal.png" />
+    <link rel="apple-touch-icon" href="/icons/os/32/app-terminal.png" />
+
+    <title>SHREY/OS — Shrey Patel</title>
+  </head>
+  <body>
+    <noscript>
+      <p style="font-family: monospace; padding: 24px; color: #e0ded6; background: #14161b">
+        SHREY/OS requires JavaScript to boot.
+        Meanwhile: Shrey Patel · MSc AI @ Brunel University London ·
+        <a href="mailto:pshrey964@gmail.com" style="color: #ffb454">pshrey964@gmail.com</a>
+      </p>
+    </noscript>
+    <div id="root"></div>
+    <!-- Adjust this path to match your bundler's entry (Vite default shown). -->
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

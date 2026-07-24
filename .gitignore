@@ -1,0 +1,9 @@
+.vercel
+.env*
+node_modules
+.claude
+dist
+static_files
+CLAUDE.md
+package-lock.json
+package.json
