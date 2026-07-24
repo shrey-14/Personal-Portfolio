@@ -4,21 +4,6 @@
    Receives the compose payload from ContactWindow.jsx and delivers it as an
    email via Resend. The Resend API key stays SERVER-SIDE (env var), never in
    the browser — this is why a serverless function beats client-only EmailJS.
-
-   ── DEPLOY CHECKLIST ────────────────────────────────────────────────────────
-   1.  npm i resend
-   2.  Create an account at resend.com, verify your sending domain (or use the
-       shared onboarding@resend.dev sender while testing).
-   3.  In Vercel → Project → Settings → Environment Variables, set:
-         RESEND_API_KEY   = re_xxxxxxxxxxxxxxxxxxxx
-         CONTACT_TO       = you@yourdomain.com        (where messages land)
-         CONTACT_FROM     = SHREY/OS Mail <mail@yourdomain.com>
-                            (must be on a domain you've verified in Resend;
-                             during testing you may use onboarding@resend.dev)
-   4.  Redeploy. The endpoint is live at /api/contact.
-
-   Netlify note: rename to netlify/functions/contact.js and swap the handler
-   signature for (event) => ({ statusCode, body }). The core logic is identical.
 ═══════════════════════════════════════════════════════════════════════════ */
 
 import { Resend } from 'resend';
