@@ -315,7 +315,7 @@ export function OSProvider({ children }) {
     if (isMobile || reducedMotion) return;
     const resetActivity = () => { lastActivityR.current = Date.now(); };
     const check = setInterval(() => {
-      if (!bsodOpen && Date.now() - lastActivityR.current > 35000) setSsActive(true);
+      if (!bsodOpen && Date.now() - lastActivityR.current > 5000) setSsActive(true);
     }, 1000);
     const evts = ['mousemove', 'keydown', 'click', 'touchstart', 'scroll'];
     evts.forEach(e => document.addEventListener(e, resetActivity, { passive: true }));

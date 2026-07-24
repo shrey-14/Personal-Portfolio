@@ -201,60 +201,94 @@ function BSODScreen({ open, onDismiss }) {
 
 // ── Screensaver ───────────────────────────────────────────────────────────────
 function Screensaver({ active, onDismiss }) {
-  const canvasRef  = useRef(null);
-  const posR       = useRef({ x: 120, y: 80, vx: 2.3, vy: 1.7 });
-  const colorIdxR  = useRef(0);
-  const COLORS     = ['#fff', '#39FF14', '#00cfff', '#ff4e8e', '#ffce00'];
+  const canvasRef = useRef(null);
+  const posR = useRef({ x: 120, y: 80, vx: 2.3, vy: 1.7 });
+  const colorIdxR = useRef(0);
+
+  const COLORS = ["#fff", "#39FF14", "#00cfff", "#ff4e8e", "#ffce00"];
 
   useEffect(() => {
     if (!active) return;
 
-    // Resolve the canvas FIRST — previously the dismiss/resize listeners were
-    // registered before this early return, leaking five listeners whenever
-    // the canvas was missing.
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const dismiss = () => onDismiss();
-    document.addEventListener('mousemove', dismiss);
-    document.addEventListener('keydown', dismiss);
-    document.addEventListener('click', dismiss);
-    document.addEventListener('touchstart', dismiss);
+    const ctx = canvas.getContext("2d");
 
-    // DPR-aware backing store so the bouncing wordmark is crisp on retina.
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const ctx = canvas.getContext('2d');
-    let W = 0, H = 0;
-    const size = () => {
-      W = window.innerWidth; H = window.innerHeight;
-      canvas.width = Math.floor(W * dpr); canvas.height = Math.floor(H * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    };
-    size();
-    const resize = () => size();
-    window.addEventListener("resize", resize);
+    const dismiss = () => onDismiss();
+
+    document.addEventListener("mousemove", dismiss);
+    document.addEventListener("keydown", dismiss);
+    document.addEventListener("click", dismiss);
+    document.addEventListener("touchstart", dismiss);
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    let W = 0;
+    let H = 0;
 
     const TEXT = "SHREY/OS";
     const FONT_SIZE = 50;
 
-    ctx.font = `${FONT_SIZE}px "Press Start 2P", monospace`;
+    let TW = 0;
+    let ascent = 0;
+    let descent = 0;
 
-    const metrics = ctx.measureText(TEXT);
-    const TW = metrics.width;
+    function updateMetrics() {
+      ctx.font = `${FONT_SIZE}px "Press Start 2P", monospace`;
 
-    // Approximate text height
-    const TH = (metrics.actualBoundingBoxAscent || FONT_SIZE) + (metrics.actualBoundingBoxDescent || 0);
+      const m = ctx.measureText(TEXT);
+
+      TW = m.width;
+      ascent = m.actualBoundingBoxAscent || FONT_SIZE;
+      descent = m.actualBoundingBoxDescent || 0;
+    }
+
+    function resize() {
+      W = window.innerWidth;
+      H = window.innerHeight;
+
+      canvas.width = Math.floor(W * dpr);
+      canvas.height = Math.floor(H * dpr);
+
+      canvas.style.width = `${W}px`;
+      canvas.style.height = `${H}px`;
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      updateMetrics();
+
+      // Keep text inside screen after resize
+      const p = posR.current;
+      p.x = Math.min(Math.max(0, p.x), W - TW);
+      p.y = Math.min(Math.max(ascent, p.y), H - descent);
+    }
+
+    async function init() {
+      // Wait until the font has actually loaded.
+      if (document.fonts) {
+        try {
+          await document.fonts.load(`${FONT_SIZE}px "Press Start 2P"`);
+        } catch {}
+      }
+
+      resize();
+    }
+
+    init();
+
+    window.addEventListener("resize", resize);
+
     let raf;
 
-    const draw = () => {
-  
-      // W/H are the CSS-pixel bounds from size() above — canvas.width/height
-      // are DEVICE pixels (×dpr), which put the right/bottom walls a whole
-      // screen too far and let the wordmark sail off the edge.
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
 
-      ctx.fillStyle = '#000';
+      ctx.fillStyle = "#000";
       ctx.fillRect(0, 0, W, H);
+
       const p = posR.current;
+
       ctx.font = `${FONT_SIZE}px "Press Start 2P", monospace`;
       ctx.fillStyle = COLORS[colorIdxR.current % COLORS.length];
       ctx.fillText(TEXT, p.x, p.y);
@@ -264,29 +298,30 @@ function Screensaver({ active, onDismiss }) {
 
       let bounced = false;
 
-      // Left / Right
+      // LEFT
       if (p.x <= 0) {
         p.x = 0;
         p.vx *= -1;
         bounced = true;
       }
 
+      // RIGHT
       if (p.x + TW >= W) {
         p.x = W - TW;
         p.vx *= -1;
         bounced = true;
       }
 
-      // Top / Bottom
-      // fillText() uses the baseline, so subtract ascent
-      if (p.y - TH <= 0) {
-        p.y = TH;
+      // TOP
+      if (p.y - ascent <= 0) {
+        p.y = ascent;
         p.vy *= -1;
         bounced = true;
       }
 
-      if (p.y >= H) {
-        p.y = H;
+      // BOTTOM
+      if (p.y + descent >= H) {
+        p.y = H - descent;
         p.vy *= -1;
         bounced = true;
       }
@@ -296,20 +331,24 @@ function Screensaver({ active, onDismiss }) {
       }
 
       raf = requestAnimationFrame(draw);
-    };
+    }
+
     raf = requestAnimationFrame(draw);
 
     return () => {
       cancelAnimationFrame(raf);
-      document.removeEventListener('mousemove', dismiss);
-      document.removeEventListener('keydown', dismiss);
-      document.removeEventListener('click', dismiss);
-      document.removeEventListener('touchstart', dismiss);
+
+      document.removeEventListener("mousemove", dismiss);
+      document.removeEventListener("keydown", dismiss);
+      document.removeEventListener("click", dismiss);
+      document.removeEventListener("touchstart", dismiss);
+
       window.removeEventListener("resize", resize);
     };
   }, [active, onDismiss]);
 
   if (!active) return null;
+
   return <canvas ref={canvasRef} className="screensaver" />;
 }
 

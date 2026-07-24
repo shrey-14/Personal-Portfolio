@@ -7,4 +7,3 @@ static_files
 CLAUDE.md
 package-lock.json
 package.json
-.gitignore
