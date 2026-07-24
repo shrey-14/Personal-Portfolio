@@ -6,4 +6,8 @@ dist
 static_files
 CLAUDE.md
 package-lock.json
+<<<<<<< HEAD
 package.json
+=======
+package.json
+>>>>>>> eefceab626e00929c32c4e47d74a4b9d9b42d140
