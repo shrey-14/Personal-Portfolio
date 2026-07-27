@@ -40,6 +40,17 @@ import { OsHardDisk, OsMaps, OsText, OsImageViewer, OsCertificate } from './OsIc
 const FEED_ICON = { radar: OsMaps, docscan: OsText, vision: OsImageViewer, forecast: OsCertificate };
 
 /* ── every field below is sourced from the CV — nothing invented ────────── */
+/* ── PROJECT LINKS ───────────────────────────────────────────────────────
+   ONE place to edit URLs (was 8 duplicated `url:/repo:` fields across two
+   files). Fill these in when the projects are deployed — Launch / View
+   Source buttons render as soon as any value is non-null. Audit §3.1. */
+const LINKS = {
+  airadar:  { url: null, repo: null },   // TODO(shrey): AI Radar live URL + GitHub
+  contract: { url: null, repo: null },   // TODO(shrey): Contract Tracker
+  road:     { url: null, repo: null },   // TODO(shrey): Road Damage Detection
+  kitchen:  { url: null, repo: null },   // TODO(shrey): AI Kitchen Optimisation
+};
+
 const PROJECTS = [
   {
     id: 'airadar',
@@ -47,8 +58,8 @@ const PROJECTS = [
     win: 'proj_airadar',
     /* TODO(shrey): set the live Vercel URL + repo — the Launch / View Source
        buttons in ProjectWindow render as soon as these are non-null. */
-    url: null,
-    repo: null,
+    url:  LINKS.airadar.url,
+    repo: LINKS.airadar.repo,
     vol: 'AI_RADAR',
     name: 'AI RADAR',
     tech: ['Next.js · FastAPI', 'pgvector · Groq'],
@@ -85,8 +96,8 @@ const PROJECTS = [
     id: 'contract',
     feed: 'docscan',
     win: 'proj_contract',
-    url: null,
-    repo: null,
+    url:  LINKS.contract.url,
+    repo: LINKS.contract.repo,
     vol: 'CONTRACTS',
     name: 'CONTRACT TRACKER',
     tech: ['LangChain · ChromaDB', 'DeepSeek V3 · React'],
@@ -120,8 +131,8 @@ const PROJECTS = [
     id: 'road',
     feed: 'vision',
     win: 'proj_road',
-    url: null,
-    repo: null,
+    url:  LINKS.road.url,
+    repo: LINKS.road.repo,
     vol: 'ROAD_DMG',
     name: 'ROAD DAMAGE',
     tech: ['YOLOv5 · PyTorch', 'OpenCV · Pandas'],
@@ -155,8 +166,8 @@ const PROJECTS = [
     id: 'kitchen',
     feed: 'forecast',
     win: 'proj_kitchen',
-    url: null,
-    repo: null,
+    url:  LINKS.kitchen.url,
+    repo: LINKS.kitchen.repo,
     vol: 'KITCHEN',
     name: 'KITCHEN OPTIMIZATION',
     badge: '1ST PLACE',

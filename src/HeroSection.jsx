@@ -988,7 +988,7 @@ function MobileHero({ shared }) {
         </MobileReveal>
 
         <MobileReveal delay={60}>
-          <StaticWindow title="System Properties">
+          <StaticWindow title="System Properties" titleIcon={<OsComputer className="title-ico-img" size={16} />}>
             <SysPropsContent />
           </StaticWindow>
         </MobileReveal>

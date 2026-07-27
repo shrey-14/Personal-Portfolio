@@ -427,8 +427,9 @@ function drawLogoReveal(ctx, W, H, S, logoT) {
 
   const cx = W / 2;
   const cyLogo = H * 0.42;
+  const isSmallScreen = W < 480;
   // Full logo box width; the cursor-S art fills most of it.
-  const size = Math.max(120, Math.min(H * 0.40, W * 0.30));
+  const size = Math.max(isSmallScreen ? 110 : 120, Math.min(H * 0.40, W * 0.30));
 
   const traceP = clamp(logoT / LOGO_TRACE_DUR, 0, 1);
   const bloomP = clamp((logoT - LOGO_TRACE_DUR) / LOGO_BLOOM_DUR, 0, 1);
@@ -478,7 +479,7 @@ function drawLogoReveal(ctx, W, H, S, logoT) {
     // The cursor-S art fills its box, so place the wordmark below the box's
     // bottom edge (box half-height ≈ size*0.42) with a comfortable gap.
     const wmY  = cyLogo + size * 0.60;
-    const wmFs = Math.max(16, Math.round(size * 0.17));   // ↑ slightly larger
+    const wmFs = Math.max(isSmallScreen ? 15 : 16, Math.round(size * 0.17));   // ↑ slightly larger
     ctx.font = `${wmFs}px ${fontReady ? '"Press Start 2P"' : "monospace"}`;
     ctx.shadowBlur  = wmFs * 0.35 * sa;                    // ↓ tighter glow → crisper
     ctx.shadowColor = cssGrey(0.55 * sa);
@@ -488,7 +489,7 @@ function drawLogoReveal(ctx, W, H, S, logoT) {
 
     // Subtitle in a legible mono (IBM Plex Mono) rather than chunky pixels —
     // small pixel type blurs; this keeps the tagline crisp and readable.
-    const subFs = Math.max(11, Math.round(size * 0.085));
+    const subFs = Math.max(isSmallScreen ? 10 : 11, Math.round(size * 0.085));
     ctx.font = `${subFs}px ${S.bootFontReady ? '"IBM Plex Mono","Courier New",monospace' : '"Courier New",monospace'}`;
     ctx.fillStyle = cssGrey(0.62 * sa);
     ctx.fillText("PORTFOLIO SYSTEM  ·  v1.0", cx, wmY + wmFs * 1.7);
@@ -654,9 +655,12 @@ function drawBootFrame(ctx, t, W, H, S) {
 
   // ── Typed boot text (scrolling terminal) ──────────────────────────
   const charsShow = charsShow0;
+  const isSmallScreen = W < 480;
   const fsFromH   = H * 0.031;                       // ↑ from 0.030 (bigger)
   const fsFromW   = (W * 0.90) / (49 * 0.60);        // a touch wider budget
-  const fs        = Math.max(11, Math.round(Math.min(fsFromH, fsFromW) * 1.15)); 
+  const fsMult    = isSmallScreen ? 1.00 : 1.15;      // shrink a bit on small screens so lines fit
+  const fsFloor   = isSmallScreen ? 10 : 11;
+  const fs        = Math.max(fsFloor, Math.round(Math.min(fsFromH, fsFromW) * fsMult));
   const lh        = Math.round(fs * 1.58);
   const padX      = Math.round(W * 0.06) + S.jX;
   const padY      = Math.round(H * 0.10) + fs;
@@ -726,7 +730,7 @@ function drawBootFrame(ctx, t, W, H, S) {
 
 // ─── Fixed footer renderer ─────────────────────────────────────────────────────
 function drawBootFooter(ctx, W, H, S, baseFs, padX) {
-  const fs = Math.max(9, Math.round(baseFs * 0.92));
+  const fs = Math.max(W < 480 ? 8 : 9, Math.round(baseFs * 0.92));
   const font = S.bootFontReady ? `${fs}px "IBM Plex Mono","Courier New",monospace` : `${fs}px "Courier New",monospace`;
   ctx.font = font;
   ctx.textAlign = "left";
@@ -950,9 +954,10 @@ function drawShutdownFrame(ctx, t, W, H, S) {
     ctx.putImageData(img, 0, 0);
 
     // text — identical sizing rules to drawBootFrame
+    const isSmallScreen = W < 480;
     const fsFromH = H * 0.031;
     const fsFromW = (W * 0.90) / (49 * 0.60);
-    const fs  = Math.max(11, Math.round(Math.min(fsFromH, fsFromW) * 1.15));
+    const fs  = Math.max(isSmallScreen ? 9 : 11, Math.round(Math.min(fsFromH, fsFromW) * (isSmallScreen ? 1.00 : 1.15)));
     const lh  = Math.round(fs * 1.58);
     const padX = Math.round(W * 0.06);
     const padY = Math.round(H * 0.16) + fs;

@@ -55,13 +55,33 @@ function DotRingCursor() {
       }
       raf = requestAnimationFrame(loop);
     };
+    /* AUDIT §2.3 — INTERACTIVE CURSOR STATE
+       One document-level listener via event bubbling instead of thousands
+       of per-element registrations that would rot the moment new elements
+       mount. body.cursor-hover toggles from the CSS side (see global.css). */
+    const INTERACTIVE = 'button, a, [role="button"], input, textarea, select, .pj-app, .sk-row, .at-sug, .bin-row';
+    const onOver = (e) => {
+      if (e.target.closest && e.target.closest(INTERACTIVE)) {
+        document.body.classList.add('cursor-hover');
+      }
+    };
+    const onOut = (e) => {
+      if (e.target.closest && e.target.closest(INTERACTIVE)) {
+        document.body.classList.remove('cursor-hover');
+      }
+    };
     document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseover', onOver);
+    document.addEventListener('mouseout',  onOut);
     raf = requestAnimationFrame(loop);
 
     return () => {
       document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseover', onOver);
+      document.removeEventListener('mouseout',  onOut);
       if (raf) cancelAnimationFrame(raf);
       document.body.classList.remove('cursor-hidden');
+      document.body.classList.remove('cursor-hover');
     };
   }, []);
 
@@ -1190,6 +1210,99 @@ function ShutdownSequence({ open, onRestart }) {
   );
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   ScrollToTop — circular progress ring + arrow, fixed bottom-right above the
+   taskbar. Appears once the visitor is ~one viewport in, reads the same
+   --scroll-p variable SiteBackground already sets, so no extra listeners.
+   Palette matches the OS: amber accent, phosphor at completion, graphite ring.
+═══════════════════════════════════════════════════════════════════════════ */
+function ScrollToTop() {
+  /* React re-renders were introducing perceived scroll lag (setState → diff
+     → commit takes 2–3 frames). We write both the SVG offset AND the class
+     changes IMPERATIVELY via refs, so every rAF tick pushes the ring exactly
+     one frame after the scroll event fires. */
+  const btnRef  = useRef(null);
+  const arcRef  = useRef(null);
+  const stateRef = useRef({ visible: false, full: false });
+
+  useEffect(() => {
+    let raf = null;
+    const R = 22;
+    const C = 2 * Math.PI * R;
+    const measure = () => {
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - window.innerHeight;
+      const p = max > 0 ? Math.min(1, Math.max(0, doc.scrollTop / max)) : 0;
+      const btn = btnRef.current;
+      const arc = arcRef.current;
+      if (arc) arc.style.strokeDashoffset = String(C - C * p);
+      if (btn) {
+        const nextVisible = doc.scrollTop > window.innerHeight * 0.4;
+        const nextFull    = p > 0.99;
+        if (nextVisible !== stateRef.current.visible) {
+          btn.classList.toggle('s2t-visible', nextVisible);
+          stateRef.current.visible = nextVisible;
+        }
+        if (nextFull !== stateRef.current.full) {
+          btn.classList.toggle('s2t-full', nextFull);
+          stateRef.current.full = nextFull;
+        }
+      }
+      raf = null;
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(measure); };
+    measure();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', measure);
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', measure);
+    };
+  }, []);
+
+  const onClick = () => {
+    playClick();
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+  };
+
+  // SVG ring metrics — r=22 → circumference ~138.23
+  const R = 22;
+  const C = 2 * Math.PI * R;
+
+  return (
+    <button
+      ref={btnRef}
+      type="button"
+      className="s2t"
+      onClick={onClick}
+      aria-label="Scroll to top"
+      title="Scroll to top">
+      <svg className="s2t-svg" viewBox="0 0 54 54" aria-hidden="true">
+        {/* graphite track */}
+        <circle className="s2t-track" cx="27" cy="27" r={R} />
+        {/* progress arc — rotated -90° so 0% starts at 12 o'clock */}
+        <circle
+          ref={arcRef}
+          className="s2t-arc"
+          cx="27" cy="27" r={R}
+          strokeDasharray={C}
+          strokeDashoffset={C}
+          transform="rotate(-90 27 27)"
+        />
+      </svg>
+      <span className="s2t-arrow" aria-hidden="true">
+        <svg viewBox="0 0 23 23" width="24" height="24">
+          <path d="M12 4 L12 20 M6 10 L12 4 L18 10"
+            fill="none" stroke="currentColor" strokeWidth="2.8"
+            strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </span>
+    </button>
+  );
+}
+
 export default function FixedComponents({ children }) {
   const os = useOS();
 
@@ -1210,6 +1323,7 @@ export default function FixedComponents({ children }) {
         wallpaperId={os.wallpaperId}
         onApply={os.applyDisplay}
       />
+      <ScrollToTop />
       {children}
     </>
   );
@@ -1268,6 +1382,7 @@ export default function FixedComponents({ children }) {
         onOpenDisplay={() => os.setDisplayOpen(true)}
       />
 
+      <ScrollToTop />
       {children}
     </>
   );

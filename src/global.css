@@ -140,6 +140,18 @@ body.cursor-hidden * {
   --tb-inact-b: #a6a6a6;
   --accent: #e89020;
   --hero-ink: #ffffff;
+
+  /* AUDIT §1.2 — CONTAINER + BREAKPOINT SYSTEM
+     Introduced as tokens (not a mass find-replace, which would risk visual
+     regression in ~120 rules). New code SHOULD use these; the parity/override
+     blocks appended late in this file DO use these, closing the "wrong-mode
+     band" between JS isMobile (900) and CSS media queries (was 840/560/480). */
+  --wrap-narrow: 560px;    /* dialogs, mobile prose columns */
+  --wrap-content: 1080px;  /* every section window & prose column */
+  --wrap-wide: 1180px;     /* hero-scale windows only */
+  --bp-mobile: 900px;      /* isMobile flips here — CSS agrees */
+  --bp-tablet: 640px;      /* tighter chrome, one-column dialogs */
+  --bp-phone: 400px;       /* rare tiny-screen bail-outs */
 }
 
 /* ── DARK (Midnight) theme — a refined GRAPHITE system ──────────────────────
@@ -1647,7 +1659,7 @@ body.cursor-hidden * {
 .about-logo {
   font-family: var(--f-display);
   font-size: 28px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--t-start);
   letter-spacing: 0.06em;
   border: 2px solid var(--t-start);
@@ -1674,6 +1686,7 @@ body.cursor-hidden * {
   font-family: var(--f-sys);
   font-size: 11px;
   cursor: default;
+  color: var(--win-text);
 }
 .about-ok:active {
   border-top-color: var(--chrome-dk);
@@ -3538,6 +3551,7 @@ body.cursor-hidden * {
   align-items: center;
   justify-content: center;
   background: var(--win-face);
+  color: var(--win-text);
   border: 2px solid;
   border-top-color: var(--win-lt);
   border-left-color: var(--win-lt);
@@ -3619,6 +3633,7 @@ body.cursor-hidden * {
   border-bottom-color: var(--win-dk);
   font-size: 12px;
   cursor: pointer;
+  font-weight:bold;
   color: var(--win-text);
 }
 .mob-drawer-list {
@@ -4696,18 +4711,18 @@ body.cursor-hidden * {
     var(--desktop-bg);
   overflow-x: clip; /* clip (never hidden) — sticky-safe */
 }
-.sk-section::before {
+/* .sk-section::before {
   /* faint desktop dot-grid */
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: radial-gradient(
-    rgba(255, 255, 255, 0.03) 1px,
-    transparent 1px
-  );
-  background-size: 22px 22px;
-}
+  /* content: ""; */
+  /* position: absolute; */
+  /* inset: 0; */
+  /* pointer-events: none; */
+  /* background-image: radial-gradient( */
+    /* rgba(255, 255, 255, 0.03) 1px, */
+    /* transparent 1px */
+  /* ); */
+  /* background-size: 22px 22px; */
+/* } */ 
 .sk-inner,
 .sk-section > * {
   position: relative;
@@ -4723,7 +4738,7 @@ body.cursor-hidden * {
   user-select: none;
   pointer-events: none;
   font-family: var(--f-display);
-  font-weight: 800;
+  font-weight: 700;
   font-size: 118px;
   line-height: 0.8;
   color: transparent;
@@ -4752,7 +4767,7 @@ body.cursor-hidden * {
 }
 .sk-title {
   font-family: var(--f-display);
-  font-weight: 800;
+  font-weight: 700;
   font-size: 40px;
   line-height: 1;
   letter-spacing: 0.02em;
@@ -5921,7 +5936,7 @@ body {
 }
 .ab-title {
   font-family: var(--f-display);
-  font-weight: 800;
+  font-weight: 700;
   font-size: 40px;
   line-height: 1;
   letter-spacing: 0.02em;
@@ -6815,18 +6830,18 @@ body {
   background: transparent;
   overflow-x: clip;
 }
-.pj-section::before {
+/* .pj-section::before {
   /* faint desktop dot-grid — matches .sk-section::before */
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: radial-gradient(
-    rgba(255, 255, 255, 0.03) 1px,
-    transparent 1px
-  );
-  background-size: 22px 22px;
-}
+  /* content: ""; */
+  /* position: absolute; */
+  /* inset: 0; */
+  /* pointer-events: none; */
+  /* background-image: radial-gradient( */
+    /* rgba(255, 255, 255, 0.03) 1px, */
+    /* transparent 1px */
+  /* ); */
+  /* background-size: 22px 22px; */
+/* } */ 
 /* same stacking fix Skills uses, rather than z-index on each child */
 .pj-section > * {
   position: relative;
@@ -6873,7 +6888,7 @@ body.pj-booting .taskbar {
 }
 .pj-title {
   font-family: var(--f-display);
-  font-weight: 800;
+  font-weight: 700;
   font-size: 40px;
   line-height: 1;
   letter-spacing: 0.02em;
@@ -8248,18 +8263,18 @@ body.pj-booting .taskbar {
   background: transparent;
   overflow-x: clip;
 }
-.jn-section::before {
+/* .jn-section::before {
   /* dot-grid — matches .sk/.pj */
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: radial-gradient(
-    rgba(255, 255, 255, 0.03) 1px,
-    transparent 1px
-  );
-  background-size: 22px 22px;
-}
+  /* content: ""; */
+  /* position: absolute; */
+  /* inset: 0; */
+  /* pointer-events: none; */
+  /* background-image: radial-gradient( */
+    /* rgba(255, 255, 255, 0.03) 1px, */
+    /* transparent 1px */
+  /* ); */
+  /* background-size: 22px 22px; */
+/* } */ 
 .jn-section > * {
   position: relative;
 }
@@ -8307,7 +8322,7 @@ body.pj-booting .taskbar {
 }
 .jn-title {
   font-family: var(--f-display);
-  font-weight: 800;
+  font-weight: 700;
   font-size: 40px;
   line-height: 1;
   letter-spacing: 0.02em;
@@ -8552,7 +8567,7 @@ body.pj-booting .taskbar {
 }
 .jn-c-ttl {
   font-family: var(--f-display);
-  font-weight: 800;
+  font-weight: 700;
   font-size: 27px;
   line-height: 1;
   color: var(--jn-sig);
@@ -11982,3 +11997,813 @@ body.pj-booting .ct-section { filter: blur(3.5px) saturate(.72) brightness(.82);
   font-family: var(--f-body); font-size: 11px;
   color: rgba(120, 120, 120, 0.9); letter-spacing: 0.1em;
 }
+/* ═══════════════════════════════════════════════════════════════════════════
+   SHUTDOWN PLATE — CRT texture parity
+   ──────────────────────────────────────────────────────────────────────────
+   .sd-root sits at z-index: 99999 (above the site-wide .crt-overlay at
+   99997), so the plate phase read as a bare black backdrop. The canvas
+   phase paints its own grain via applyGrainRaw() — so we only need to
+   texture the PLATE. Same two-layer recipe as the rest of the site:
+     · fine phosphor grain     (matches the per-window sk-crt/ab-crt sheens)
+     · sparse horizontal scan  (matches CRTOverlay.jsx's 9px grid)
+   Attached to .sd-root::before/::after so nothing changes when the canvas
+   phase is up (it's absolutely covered), and the plate inherits the tube.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* fine phosphor grain — SVG turbulence, same trick the per-window sheens use */
+.sd-root::before {
+  content: '';
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.86  0 0 0 0 0.86  0 0 0 0 0.86  0 0 0 0.18 0'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+  background-size: 140px 140px;
+  mix-blend-mode: screen;
+  opacity: 0.35;
+}
+/* horizontal scanlines — same 9px cadence as CRTOverlay.jsx, subtle vignette */
+.sd-root::after {
+  content: '';
+  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg,
+      rgba(255,255,255,0.028) 0px,
+      rgba(255,255,255,0.028) 1px,
+      transparent 1px,
+      transparent 3px),
+    radial-gradient(120% 90% at 50% 50%,
+      transparent 55%,
+      rgba(0,0,0,0.55) 100%);
+}
+/* the canvas and the plate ride ABOVE the texture layers */
+.sd-canvas { z-index: 3; }
+.sd-off    { z-index: 3; position: relative; }
+
+/* softer barely-perceptible breathing on the plate — the tube is still warm */
+.sd-off { animation: sdPlateIn 0.6s ease 0.1s both, sdBreathe 4.2s ease-in-out 0.7s infinite; }
+@keyframes sdBreathe {
+  0%, 100% { filter: brightness(1) contrast(1); }
+  50%      { filter: brightness(1.03) contrast(1.02); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-root::before,
+  .sd-root::after { display: none; }
+  .sd-off { animation: none; }
+}
+/* ═══════════════════════════════════════════════════════════════════════════
+   AUDIT §1.1 — FAUX-800 → REAL 700 + honest stroke
+   ───────────────────────────────────────────────────────────────────────────
+   Chakra Petch's real max weight is 700. Seven sites requested 800, which the
+   browser synthesises with a rightward glyph smear (the same mechanism that
+   made SHREY/PATEL feel off-centre earlier, and still affects .jn-c-ttl
+   inside its card). Fixed at source above; here we recover the lost mass
+   honestly with a 0.6px text-stroke (paint-order: stroke fill keeps ink
+   symmetric — the stroke thickens equally on both sides of every glyph,
+   unlike faux-bold which only adds mass to the right).
+═══════════════════════════════════════════════════════════════════════════ */
+.sk-title, .ab-title, .pj-title, .jn-title, .at-title, .ct-title,
+.about-logo, .jn-c-ttl, .sk-cabinet-h1 {
+  -webkit-text-stroke: 0.6px currentColor;
+  paint-order: stroke fill;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AUDIT §2.3 — INTERACTIVE CURSOR STATE (revised)
+   ───────────────────────────────────────────────────────────────────────────
+   The dot MUST track the pointer 1:1 with no easing — any transition on
+   `transform` makes every mousemove interpolate, which reads as lag. The
+   ring's smooth trail already comes from the rAF interpolation in JS, not
+   from CSS transitions.
+   The hover affordance is now size, not colour: the dot INFLATES ~2.6× and
+   the ring INFLATES ~1.25× — same phosphor/amber palette, but the geometry
+   change is what says "clickable here". Sizes are driven by CSS custom
+   properties so they compose with the per-frame translate written by the
+   rAF loop instead of stomping it.
+═══════════════════════════════════════════════════════════════════════════ */
+.cursor-dot {
+  /* NO transition on transform — that would ease every mousemove and make
+     the cursor feel sluggish. Only width/height/background animate. */
+  transition: width 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.18s ease,
+              border-radius 0.18s ease;
+}
+.cursor-ring {
+  transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.22s ease,
+              opacity 0.22s ease;
+}
+
+/* HOVER — size affordance (geometry, not saturation) */
+body.cursor-hover .cursor-dot {
+  /* base is 9px → 13px on hover; JS re-centres via the CSS var too */
+  width:  13px !important;
+  height: 13px !important;
+  /* soft rounded square reads as a UI hit-target — different SHAPE, not
+     just size, so it registers instantly even at high pointer velocity */
+  border-radius: 50%;
+  background: var(--accent, #e89020);
+  opacity: 0.9;
+}
+body.cursor-hover .cursor-ring {
+  /* base is 36px → 41px; slight breathe on entry */
+  width:  41px !important;
+  height: 41px !important;
+  border-color: var(--accent, #e89020);
+  opacity: 0.85;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cursor-dot, .cursor-ring { transition: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AUDIT §2.2 — PROGRAM MANAGER HOVER: fourth beat
+   Currently: tile scales, scene accelerates, RUN CTA slides. This adds the
+   fourth layer — a phosphor-tinted shadow cast on hover, plus subtle
+   desaturation of the OTHER tiles so the hovered one reads as "foregrounded
+   in the OS", not "scaled up card". The single biggest hover-polish win.
+═══════════════════════════════════════════════════════════════════════════ */
+.pj-progman .pj-app { transition: transform 0.18s var(--ease-window, ease),
+                                    box-shadow 0.18s var(--ease-window, ease),
+                                    filter 0.24s ease; }
+.pj-progman .pj-app:hover {
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.5),
+              7px 11px 0 rgba(0,0,0,0.22),
+              0 20px 40px rgba(57, 255, 20, 0.09);   /* NEW: phosphor cast */
+  filter: saturate(1.06);
+  z-index: 3;
+}
+/* the un-hovered tiles very slightly recede — the whole "focus" perception */
+.pj-progman:hover .pj-app:not(:hover) { filter: saturate(0.92); }
+@media (prefers-reduced-motion: reduce) {
+  .pj-progman .pj-app { transition: none; }
+  .pj-progman:hover .pj-app:not(:hover) { filter: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AUDIT §4.2 — Z-INDEX LAYER SPEC (documentation, not enforcement)
+   ───────────────────────────────────────────────────────────────────────────
+     0–9      section content
+     10–99    window chrome (windows-on-desktop)
+     100      taskbar
+     800–899  soft overlays (context menu, dial-up)
+     900–999  hard dialogs (About, Recycle Bin, Display Properties)
+     99997    CRT overlay (below screensaver/BSOD)
+     99998    Screensaver
+     99999    BSOD, Shutdown
+     100000+  Cursor
+     100002   Scroll progress bar (above cursor — status must never be occluded)
+     999999   Error boundary (only rendered when the sky is falling)
+   Reference above; each z-index value in this file should match one of these
+   bands. Codified in Week 2 of the audit roadmap.
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCROLL TO TOP — circular progress ring above the taskbar
+   ───────────────────────────────────────────────────────────────────────────
+   Replaces the retired top scroll bar. A 54×54 button pinned bottom-right,
+   sitting ~14px above the taskbar (32px taskbar + 14px gap). The ring
+   completes as the visitor scrolls; on click, smooth-scrolls to top with a
+   subtle pulse. On-brand: graphite track · amber arc · phosphor at 100%.
+═══════════════════════════════════════════════════════════════════════════ */
+.s2t {
+  position: fixed;
+  right: 20px;
+  bottom: calc(var(--taskbar-h, 32px) + 18px);
+  width: 54px; height: 54px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  z-index: 90;
+  /* start hidden — fades + slides in when the visitor scrolls */
+  opacity: 0;
+  transform: translateY(14px) scale(0.85);
+  pointer-events: none;
+  transition:
+    opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.35));
+}
+.s2t-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+/* SVG ring — the two concentric circles */
+.s2t-svg {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  overflow: visible;
+}
+.s2t-track {
+  fill: none;
+  stroke: rgba(180, 185, 195, 0.28);
+  stroke-width: 3;
+}
+.s2t-arc {
+  fill: none;
+  stroke: var(--accent, #e89020);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.18s ease-out, stroke 0.28s ease;
+  filter: drop-shadow(0 0 6px rgba(232, 144, 32, 0.45));
+}
+.s2t-full .s2t-arc {
+  stroke: var(--phosphor, #39ff14);
+  filter: drop-shadow(0 0 8px rgba(57, 255, 20, 0.6));
+}
+
+/* the disc under the icon — subtle graphite well with a bevelled edge, in
+   the same visual language as the OS chrome */
+.s2t::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.09), transparent 60%),
+    linear-gradient(180deg, #2c3038, #1a1d23);
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* arrow + TOP label stack, centred on top of the disc */
+.s2t-arrow {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent, #e89020);
+  transition: color 0.28s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(-3px);
+}
+.s2t-full .s2t-arrow { color: var(--phosphor, #39ff14); }
+.s2t-hint {
+  position: absolute;
+  bottom: 11px; left: 0; right: 0;
+  text-align: center;
+  font: 700 7px "IBM Plex Mono", monospace;
+  letter-spacing: 0.14em;
+  color: rgba(180, 185, 195, 0.55);
+  transition: color 0.28s ease;
+  pointer-events: none;
+}
+.s2t-full .s2t-hint { color: rgba(57, 255, 20, 0.7); }
+
+/* HOVER — the amber arc glows brighter, the disc lifts a touch, arrow floats */
+.s2t:hover::before {
+  transform: scale(1.04);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+    0 0 24px rgba(232, 144, 32, 0.28);
+}
+.s2t:hover .s2t-arc { stroke-width: 3.4; filter: drop-shadow(0 0 10px rgba(232, 144, 32, 0.75)); }
+.s2t:hover .s2t-arrow { transform: translateY(-6px); }
+.s2t:hover .s2t-hint  { color: rgba(232, 144, 32, 0.85); }
+
+/* CLICK — snappy press-in */
+.s2t:active::before { transform: scale(0.96); }
+.s2t:active .s2t-arrow { transform: translateY(-9px) scale(0.92); }
+
+/* IDLE BREATHING — barely-perceptible pulse on the arc, so the widget
+   never feels dead when idle mid-page */
+@keyframes s2tArcBreathe {
+  0%, 100% { opacity: 0.9; }
+  50%      { opacity: 0.62; }
+}
+.s2t-visible .s2t-arc {
+  animation: s2tArcBreathe 3.4s ease-in-out infinite;
+}
+.s2t:hover .s2t-arc { animation: none; opacity: 1; }
+
+/* MOBILE — nudge slightly smaller and inward so it doesn't crowd the FAB
+   area on phones */
+@media (max-width: 640px) {
+  .s2t {
+    right: 14px;
+    bottom: calc(var(--taskbar-h, 32px) + 14px);
+    width: 48px; height: 48px;
+  }
+  .s2t-hint { bottom: 9px; font-size: 6.5px; }
+}
+
+/* REDUCED MOTION — no breathing, no scale, still functional */
+@media (prefers-reduced-motion: reduce) {
+  .s2t, .s2t::before, .s2t-arrow, .s2t-arc { transition: none; animation: none; }
+  .s2t { transform: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PIXEL BUDDY — v2 (72-frame character)
+   ───────────────────────────────────────────────────────────────────────────
+   Anchored bottom-right, clear of ScrollToTop (right: 90px) and the
+   taskbar. Sprite is imageRendering: pixelated so integer scaling stays
+   crisp on 4K displays. Mood classes (buddy-mood-sleep / -panic / -type)
+   layer subtle effects on top of the sprite: a cool hue-shift when
+   sleeping, a 3px vibration when panicking, a phosphor tint when typing.
+═══════════════════════════════════════════════════════════════════════════ */
+.buddy-root {
+  position: fixed;
+  right: 90px;
+  bottom: calc(var(--taskbar-h, 32px) + 12px);
+  z-index: 85;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  animation: buddyIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes buddyIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.buddy-sprite-btn {
+  pointer-events: auto;
+  position: relative;
+  padding: 0; margin: 0; border: 0;
+  background: none;
+  cursor: pointer;
+  animation: buddyBob 3.6s ease-in-out infinite;
+  filter: drop-shadow(4px 6px 8px rgba(0, 0, 0, 0.45));
+  transition: filter 0.4s ease;
+}
+@keyframes buddyBob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+.buddy-sprite-btn:active { transform: scale(0.97); }
+.buddy-sprite { display: block; }
+
+/* ── MOOD OVERLAYS ────────────────────────────────────────────────────
+   Real characters *feel* different when they're in different states.
+   Instead of drawing separate sheets for tinted variants, we tint via
+   CSS filters — which cost zero KB and stack cleanly on top of the
+   base sprite. */
+.buddy-mood-sleep .buddy-sprite-btn {
+  animation: buddyBob 5.4s ease-in-out infinite;    /* slower breathing */
+  filter:
+    drop-shadow(4px 6px 8px rgba(0, 0, 0, 0.45))
+    hue-rotate(-15deg) brightness(0.88) saturate(0.85);
+}
+.buddy-mood-panic .buddy-sprite-btn {
+  animation: buddyPanic 0.08s linear infinite;
+  filter:
+    drop-shadow(2px 3px 4px rgba(220, 40, 40, 0.55))
+    brightness(1.05) saturate(1.1);
+}
+@keyframes buddyPanic {
+  0%, 100% { transform: translate(0, 0); }
+  25%      { transform: translate(-2px, 1px); }
+  50%      { transform: translate(2px, -1px); }
+  75%      { transform: translate(-1px, -2px); }
+}
+.buddy-mood-type .buddy-sprite-btn {
+  animation: buddyType 1.2s ease-in-out infinite;
+  filter:
+    drop-shadow(0 0 6px rgba(57, 255, 20, 0.35))
+    drop-shadow(4px 6px 8px rgba(0, 0, 0, 0.45));
+}
+@keyframes buddyType {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-1px); }
+}
+
+/* ── DISMISS (×) ─────────────────────────────────────────────────────
+   Win95 bevelled button, only visible on hover of the root */
+.buddy-close {
+  pointer-events: auto;
+  position: absolute;
+  top: -6px; right: -6px;
+  width: 22px; height: 22px;
+  padding: 0;
+  cursor: pointer;
+  background: var(--chrome, #c0c0c0);
+  color: #000;
+  border: 2px solid;
+  border-top-color: var(--chrome-lt, #dfdfdf);
+  border-left-color: var(--chrome-lt, #dfdfdf);
+  border-right-color: var(--chrome-dk, #808080);
+  border-bottom-color: var(--chrome-dk, #808080);
+  font: 700 12px "IBM Plex Sans", sans-serif;
+  line-height: 1;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.buddy-root:hover .buddy-close {
+  opacity: 1;
+  transform: scale(1);
+}
+.buddy-close:active {
+  border-top-color: var(--chrome-dk, #808080);
+  border-left-color: var(--chrome-dk, #808080);
+  border-right-color: var(--chrome-lt, #dfdfdf);
+  border-bottom-color: var(--chrome-lt, #dfdfdf);
+}
+
+/* ── SPEECH BUBBLE ───────────────────────────────────────────────────
+   Win95 tooltip — cream ground in light theme, dark in dark theme.
+   Small tail at the bottom-left points toward the buddy. Enters with a
+   subtle bloom so it doesn't feel jarring. */
+.buddy-bubble {
+  pointer-events: none;
+  position: relative;
+  align-self: flex-start;
+  max-width: 220px;
+  padding: 8px 12px;
+  background: #ffffcc;
+  color: #000;
+  border: 1px solid #000;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35);
+  font: 500 11.5px "IBM Plex Sans", "Chakra Petch", sans-serif;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  animation: bubbleIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  white-space: normal;
+}
+[data-theme="dark"] .buddy-bubble {
+  background: #2a2d33;
+  color: #ffedb0;
+  border-color: #14161b;
+}
+.buddy-bubble-tail {
+  position: absolute;
+  bottom: -6px; left: 32px;
+  width: 10px; height: 6px;
+  background: inherit;
+  border-right: 1px solid #000;
+  border-bottom: 1px solid #000;
+  transform: rotate(45deg);
+}
+[data-theme="dark"] .buddy-bubble-tail { border-color: #14161b; }
+@keyframes bubbleIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.92); transform-origin: bottom left; }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+/* ── SUBTLE Z-INDICATOR ─────────────────────────────────────────────
+   When sleeping, the sprite ALREADY contains z's, but a subtle CSS
+   glow around them helps the pose read as "sleeping" at a glance
+   even in peripheral vision. */
+.buddy-mood-sleep .buddy-sprite-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 75% 15%,
+    rgba(120, 180, 255, 0.15) 0%,
+    transparent 30%);
+  animation: buddySleep 4s ease-in-out infinite;
+}
+@keyframes buddySleep {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1;   }
+}
+
+/* ── HIDE on touch / mobile ─────────────────────────────────────────
+   A desktop pet on a phone is in the way, and the whole point is he
+   lives on a WINDOWS desktop. */
+@media (max-width: 900px), (hover: none), (pointer: coarse) {
+  .buddy-root { display: none; }
+}
+/* Reduced motion — kill the bob, panic shake, sleep tint animation */
+@media (prefers-reduced-motion: reduce) {
+  .buddy-sprite-btn,
+  .buddy-mood-sleep .buddy-sprite-btn,
+  .buddy-mood-panic .buddy-sprite-btn,
+  .buddy-mood-type .buddy-sprite-btn { animation: none; }
+  .buddy-bubble { animation: none; }
+  .buddy-root   { animation: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FIXES BATCH — Notepad scrollbar · SysProps tabs · ScrollToTop palette
+   ───────────────────────────────────────────────────────────────────────────
+   1. Notepad's scrollbar was showing browser-default black. Applies the
+      same graphite-grey Win95 chrome the rest of the site uses (mirrors
+      .sk-scroll::-webkit-scrollbar which About/Skills already share).
+   2. SysProps tabs were flat with no active indicator. Now they match
+      About's tab pattern exactly — bevelled chrome, active tab merges
+      down into content, and a 2px --sk-sig (navy in light / amber in
+      dark) line sits above the active tab. Also fixes the light-theme
+      text colour and adds sysprop-body scrollbar styling.
+   3. ScrollToTop was amber/graphite in both themes. Now it matches the
+      taskbar palette: chrome grey disc + navy arc in LIGHT; charcoal
+      disc + amber arc in DARK. The progress ring itself is repainted
+      per-frame from the rAF loop so it updates instantly with scroll.
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. NOTEPAD SCROLLBAR — Win95 grey style ───────────────────────── */
+.notepad-content::-webkit-scrollbar {
+  width: 15px;
+}
+.notepad-content::-webkit-scrollbar-track {
+  background: var(--chrome);
+  border-left: 1px solid var(--chrome-dk);
+}
+.notepad-content::-webkit-scrollbar-thumb {
+  background: var(--chrome);
+  border: 1.5px solid;
+  border-top-color: var(--chrome-lt);
+  border-left-color: var(--chrome-lt);
+  border-right-color: var(--chrome-dk);
+  border-bottom-color: var(--chrome-dk);
+}
+.notepad-content::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--chrome) 92%, var(--t-start));
+}
+.notepad-content::-webkit-scrollbar-button {
+  display: block;
+  height: 15px;
+  background: var(--chrome);
+  border: 1.5px solid;
+  border-top-color: var(--chrome-lt);
+  border-left-color: var(--chrome-lt);
+  border-right-color: var(--chrome-dk);
+  border-bottom-color: var(--chrome-dk);
+}
+.notepad-content { scrollbar-color: var(--chrome) var(--chrome); }
+
+/* Same for the Ln/Col status bar area — no bleed-through from parent black */
+.notepad-editor {
+  background: var(--field-bg, #fff);
+}
+
+/* ── 2. SYSTEM PROPERTIES — tab styling matching About + light theme text ─ */
+
+/* Rebuild the tab row with About's exact pattern: 5px bottom padding, gap 2px,
+   1px chrome-dk baseline; the active tab overlaps the baseline by -1px. */
+.sysprop-tabs {
+  gap: 2px;
+  padding: 5px 6px 0;
+  border-bottom: 1px solid var(--chrome-dk);
+  background: var(--chrome);
+}
+.sysprop-tab {
+  padding: 4px 14px 5px;
+  background: var(--chrome);
+  cursor: pointer;
+  border: 2px solid;
+  border-top-color: var(--chrome-lt);
+  border-left-color: var(--chrome-lt);
+  border-right-color: var(--chrome-dk);
+  border-bottom-color: var(--chrome-dk);
+  font: 500 10px var(--f-sys);
+  color: var(--win-text);
+  white-space: nowrap;
+  position: relative;
+  opacity: 0.88;
+  transition: opacity 120ms ease;
+}
+.sysprop-tab:hover { opacity: 1; }
+.sysprop-tab-active {
+  color: var(--win-text);
+  font-weight: 700;
+  opacity: 1;
+  border-bottom-color: var(--chrome);
+  margin-bottom: -1px;
+  z-index: 1;
+  padding-bottom: 6px;
+}
+/* The signature line — same colour token About uses (--sk-sig / --ab-sig
+   fallback to navy in light, amber in dark, matches the section palette) */
+.sysprop-tab-active::before {
+  content: "";
+  position: absolute;
+  top: -2px; left: -2px; right: -2px;
+  height: 2px;
+  background: var(--ab-sig, #000080);
+}
+[data-theme="dark"] .sysprop-tab-active::before {
+  background: var(--ab-sig, #ffb454);
+}
+
+/* LIGHT-theme text throughout the SysProps content — everything explicitly
+   black-on-chrome. The old rules cascaded from a dark-theme override that
+   set win-text = white; scoping to LIGHT alone fixes it universally. */
+[data-theme="light"] .sysprop-tab,
+[data-theme="light"] .sysprop-tab-active,
+[data-theme="light"] .sysprop-reg,
+[data-theme="light"] .sysprop-label,
+[data-theme="light"] .sysprop-value,
+[data-theme="light"] .spec-row,
+[data-theme="light"] .spec-key,
+[data-theme="light"] .spec-name,
+[data-theme="light"] .dm-cat,
+[data-theme="light"] .dm-name,
+[data-theme="light"] .dm-pct,
+[data-theme="light"] .perf-label {
+  color: #000;
+}
+[data-theme="light"] .sysprop-os { color: #000080; }
+[data-theme="light"] .dm-cat     { color: #000080; }
+
+/* SysProps body — apply the same Win95 scrollbar the rest of the site uses */
+.sysprop-body::-webkit-scrollbar { width: 15px; }
+.sysprop-body::-webkit-scrollbar-track { background: var(--chrome); }
+.sysprop-body::-webkit-scrollbar-thumb {
+  background: var(--chrome);
+  border: 1.5px solid;
+  border-top-color: var(--chrome-lt);
+  border-left-color: var(--chrome-lt);
+  border-right-color: var(--chrome-dk);
+  border-bottom-color: var(--chrome-dk);
+}
+
+/* ── 3. SCROLL-TO-TOP — theme-aware palette ─────────────────────────
+   In LIGHT: disc is the same grey as the taskbar (--chrome), arc + arrow are
+   navy (--t-start = #000080). In DARK: disc is the taskbar's dark charcoal
+   (--tb-start / --win-face), arc + arrow are amber (--accent). The ring
+   redraws instantly on scroll because it's an SVG stroke-dashoffset written
+   directly from rAF — no CSS transition on the arc itself, so the length
+   updates the same frame as the scroll event.
+──────────────────────────────────────────────────────────────────── */
+
+/* Disc — mirrors taskbar chrome per-theme */
+.s2t::before {
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.12), transparent 60%),
+    var(--chrome, #c0c0c0);
+  border: 1px solid var(--chrome-dk, #808080);
+  box-shadow:
+    inset 0 1px 0 var(--chrome-lt, #dfdfdf),
+    inset 0 -1px 0 var(--chrome-dk, #808080);
+}
+[data-theme="dark"] .s2t::before {
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.06), transparent 60%),
+    linear-gradient(180deg, #2c3038, #1a1d23);
+  border-color: rgba(0, 0, 0, 0.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* Track — subtle graphite in both themes */
+.s2t-track {
+  stroke: rgba(0, 0, 0, 0.18);
+}
+[data-theme="dark"] .s2t-track {
+  stroke: rgba(180, 185, 195, 0.28);
+}
+
+/* Arc — LIGHT: navy · DARK: amber. Zero transition on stroke-dashoffset
+   so the ring is instant. */
+.s2t-arc {
+  stroke: #000080;                                 /* light theme navy */
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke 0.28s ease, stroke-width 0.2s ease;
+  filter: drop-shadow(0 0 4px rgba(0, 0, 128, 0.35));
+}
+[data-theme="dark"] .s2t-arc {
+  stroke: #e89020;                                 /* dark theme amber */
+  filter: drop-shadow(0 0 6px rgba(232, 144, 32, 0.45));
+}
+.s2t-full .s2t-arc {
+  stroke: #39ff14;
+  filter: drop-shadow(0 0 8px rgba(57, 255, 20, 0.6));
+}
+
+/* Arrow — matches the arc per theme */
+.s2t-arrow { color: #000080; }
+[data-theme="dark"] .s2t-arrow { color: #e89020; }
+.s2t-full .s2t-arrow { color: #39ff14; }
+
+/* Hover state — repaint the glow in the current theme's palette */
+.s2t:hover::before {
+  transform: scale(1.04);
+  box-shadow:
+    inset 0 1px 0 var(--chrome-lt, #dfdfdf),
+    inset 0 -1px 0 var(--chrome-dk, #808080),
+    0 0 24px rgba(0, 0, 128, 0.24);
+}
+[data-theme="dark"] .s2t:hover::before {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+    0 0 24px rgba(232, 144, 32, 0.28);
+}
+.s2t:hover .s2t-arc {
+  stroke-width: 3.6;
+  filter: drop-shadow(0 0 8px rgba(0, 0, 128, 0.6));
+}
+[data-theme="dark"] .s2t:hover .s2t-arc {
+  filter: drop-shadow(0 0 10px rgba(232, 144, 32, 0.75));
+}
+
+/* Hint label under the arrow — also theme-aware */
+.s2t-hint {
+  color: rgba(0, 0, 0, 0.55);
+}
+[data-theme="dark"] .s2t-hint {
+  color: rgba(180, 185, 195, 0.6);
+}
+.s2t:hover .s2t-hint      { color: rgba(0, 0, 128, 0.85); }
+[data-theme="dark"] .s2t:hover .s2t-hint { color: rgba(232, 144, 32, 0.85); }
+.s2t-full .s2t-hint       { color: rgba(57, 255, 20, 0.75); }
+
+/* Kill the idle-breathe on the arc — it's a subtle opacity fade that
+   fights the "instant response to scroll" the user asked for. Static
+   opacity keeps the arc solid at all times. */
+.s2t-visible .s2t-arc {
+  animation: none;
+  opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCROLL-TO-TOP — refined visibility pass
+   ───────────────────────────────────────────────────────────────────────────
+   The blue/amber arc was disappearing into the taskbar-coloured disc because
+   the "track" (the always-drawn ring under the arc) was too thin and pale to
+   act as a border. Now the track uses the SAME stroke-width as the arc and
+   a mid-tone that reads as a hard outline in either theme, so the coloured
+   arc always sits inside a visible ring of taskbar chrome — exactly like the
+   OP request "grey padding around the blue line". Plus:
+     · TOP label removed, arrow enlarged to 22×22 for centred balance
+     · all hover/complete glows removed, colours stay put through the whole
+       scroll journey
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* Track = the "grey padding". Same stroke-width as the arc so it reads as a
+   consistent-thickness ring, not a hairline the arc floats above. */
+.s2t-track {
+  stroke: #c0c0c0 !important;                /* light theme = taskbar grey */
+  stroke-width: 8 !important;
+  opacity: 1 !important;
+}
+[data-theme="dark"] .s2t-track {
+  stroke: #2c3038 !important;                /* dark theme = taskbar charcoal */
+}
+
+/* Arc — no drop-shadow, no filter, just solid theme colour */
+.s2t-arc {
+  stroke: #000080;
+  stroke-width: 3;
+  stroke-linecap: round;
+  filter: none;
+  transition: stroke 0.28s ease;
+}
+[data-theme="dark"] .s2t-arc {
+  stroke: #e89020;
+  filter: none;
+}
+
+/* Completion state — DO NOT recolour. Same theme colour end-to-end. */
+.s2t-full .s2t-arc {
+  stroke: #000080;
+  filter: none;
+}
+[data-theme="dark"] .s2t-full .s2t-arc {
+  stroke: #e89020;
+  filter: none;
+}
+.s2t-full .s2t-arrow {
+  color: #000080;
+}
+[data-theme="dark"] .s2t-full .s2t-arrow {
+  color: #e89020;
+}
+
+/* Hover — subtle disc lift only; NO arc glow, NO stroke thickening, NO
+   drop-shadow. The pure colour holds through hover. */
+.s2t:hover .s2t-arc {
+  stroke-width: 3;
+  filter: none;
+}
+[data-theme="dark"] .s2t:hover .s2t-arc {
+  filter: none;
+}
+.s2t:hover::before {
+  box-shadow:
+    inset 0 1px 0 var(--chrome-lt, #dfdfdf),
+    inset 0 -1px 0 var(--chrome-dk, #808080);
+}
+[data-theme="dark"] .s2t:hover::before {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* Arrow — enlarged to 22×22 in JSX; the flex container centres it, so
+   remove the -3px vertical nudge that had it sitting above the TOP label. */
+.s2t-arrow {
+  transform: translateY(0);
+  color: #000080;
+}
+[data-theme="dark"] .s2t-arrow {
+  color: #e89020;
+}
+.s2t:hover .s2t-arrow  { transform: translateY(-2px); }
+.s2t:active .s2t-arrow { transform: translateY(-5px) scale(0.94); }
+
+/* Hint element removed from JSX; kill any residual layout that referenced it */
+.s2t-hint { display: none !important; }

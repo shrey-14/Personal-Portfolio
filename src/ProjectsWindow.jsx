@@ -20,14 +20,25 @@ import {
 } from './OsIcons.jsx';
 
 /* ── All project data (CV-sourced) ─────────────────────────────────────── */
-export const PROJECTS_DATA = [
+export /* ── PROJECT LINKS ───────────────────────────────────────────────────────
+   ONE place to edit URLs (was 8 duplicated `url:/repo:` fields across two
+   files). Fill these in when the projects are deployed — Launch / View
+   Source buttons render as soon as any value is non-null. Audit §3.1. */
+const LINKS = {
+  airadar:  { url: null, repo: null },   // TODO(shrey): AI Radar live URL + GitHub
+  contract: { url: null, repo: null },   // TODO(shrey): Contract Tracker
+  road:     { url: null, repo: null },   // TODO(shrey): Road Damage Detection
+  kitchen:  { url: null, repo: null },   // TODO(shrey): AI Kitchen Optimisation
+};
+
+const PROJECTS_DATA = [
   {
     id: 'airadar',
     Ico: OsMaps,
     /* TODO(shrey): set the live Vercel URL + GitHub repo — Launch enables and
        a Source button appears as soon as these are non-null. */
-    url: null,
-    repo: null,
+    url:  LINKS.airadar.url,
+    repo: LINKS.airadar.repo,
     name: 'AI Radar',
     date: 'May – Jun 2026',
     status: 'LIVE',
@@ -68,8 +79,8 @@ export const PROJECTS_DATA = [
   {
     id: 'contract',
     Ico: OsText,
-    url: null,
-    repo: null,
+    url:  LINKS.contract.url,
+    repo: LINKS.contract.repo,
     name: 'Contract Tracker',
     date: '2026',
     status: 'IN DEV',
@@ -105,8 +116,8 @@ export const PROJECTS_DATA = [
   {
     id: 'road',
     Ico: OsImageViewer,
-    url: null,
-    repo: null,
+    url:  LINKS.road.url,
+    repo: LINKS.road.repo,
     name: 'Road Damage Detection',
     date: 'Mar – Apr 2024',
     status: 'COMPLETE',
@@ -142,8 +153,8 @@ export const PROJECTS_DATA = [
   {
     id: 'kitchen',
     Ico: OsCertificate,
-    url: null,
-    repo: null,
+    url:  LINKS.kitchen.url,
+    repo: LINKS.kitchen.repo,
     name: 'AI Kitchen Optimisation',
     date: 'Mar 2025',
     status: '1ST PLACE',

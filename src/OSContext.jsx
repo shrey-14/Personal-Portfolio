@@ -367,7 +367,8 @@ export function OSProvider({ children }) {
       });
     }
     // The Contact section's own CTA: same dial-up handshake, but it lands on
-    // the mail COMPOSE window (the visitor is already at the section).
+    // the mail COMPOSE window (the 
+    // visitor is already at the section).
     if (action === 'contact_mail') {
       setCtxMenu(null);
       const phases = ['DIALING...', 'CONNECTING...', 'AUTHENTICATING...', 'CONNECTED!'];
