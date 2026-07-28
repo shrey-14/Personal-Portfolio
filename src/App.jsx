@@ -10,7 +10,7 @@ import FixedComponents from "./FixedComponents.jsx";
 import JourneySection from "./JourneySection.jsx";
 import AskShreySection from "./AskShreySection.jsx";
 import ContactSection from "./ContactSection.jsx";
-import PixelBuddy from "./PixelBuddy.jsx";
+// import PixelBuddy from "./PixelBuddy.jsx";
 import ErrorBoundary from "./ErrorBoundary.jsx";
 
 export default function App() {
@@ -37,18 +37,20 @@ export default function App() {
       )}
 
       {bootDone && (
-        <OSProvider>
-          <FixedComponents>
-            <HeroSection />
-            <AboutSection />
-            <SkillsSection />
-            <ProjectsSection />
-            <JourneySection />
-            <AskShreySection />
-            <ContactSection />
-            <PixelBuddy />
-          </FixedComponents>
-        </OSProvider>
+        <div className="os-mount-in">
+          <OSProvider>
+            <FixedComponents>
+              <HeroSection />
+              <AboutSection />
+              <SkillsSection />
+              <ProjectsSection />
+              <JourneySection />
+              <AskShreySection />
+              <ContactSection />
+              {/* <PixelBuddy /> */}
+            </FixedComponents>
+          </OSProvider>
+        </div>
       )}
 
       <CRTOverlay />

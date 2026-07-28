@@ -436,6 +436,13 @@ const CTX_ITEMS = [
 ];
 
 function ContextMenu({ pos, onAction, onClose }) {
+  useEffect(() => {
+    if (!pos) return;
+    const onKey = e => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [pos, onClose]);
+
   if (!pos) return null;
   // Clamp against the menu's DERIVED size, not a hardcoded guess —
   // rows ≈ 22px, dividers ≈ 8px, chrome ≈ 8px.
@@ -461,6 +468,13 @@ function ContextMenu({ pos, onAction, onClose }) {
 }
 
 function AboutDialog({ open, onClose }) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = e => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
+
   if (!open) return null;
   const close = () => { playClick(); onClose(); };
   return (
@@ -468,10 +482,11 @@ function AboutDialog({ open, onClose }) {
       {/* Same window language as System Monitor / Training Monitor:
           22px gradient titlebar, menubar, panel headers, bevelled
           statusbar cells — not the old flat mini-dialog. */}
-      <div className="syswin syswin-about" onMouseDown={e => e.stopPropagation()}>
+      <div className="syswin syswin-about" onMouseDown={e => e.stopPropagation()}
+        role="dialog" aria-modal="true" aria-labelledby="about-dialog-title">
         <div className="syswin-tb">
           <OsComputer className="syswin-tico" size={16} />
-          <span className="syswin-tt">My Computer — System Properties</span>
+          <span className="syswin-tt" id="about-dialog-title">My Computer — System Properties</span>
           <div className="syswin-btns">
             <button className="win-btn" aria-hidden="true" tabIndex={-1}>_</button>
             <button className="win-btn" aria-hidden="true" tabIndex={-1}>□</button>
@@ -649,10 +664,11 @@ function RecycleBinDialog({ open, onClose }) {
 
   return (
     <div className="dialog-back" onMouseDown={close}>
-      <div className="syswin syswin-bin" onMouseDown={e => e.stopPropagation()}>
+      <div className="syswin syswin-bin" onMouseDown={e => e.stopPropagation()}
+        role="dialog" aria-modal="true" aria-labelledby="bin-dialog-title">
         <div className="syswin-tb">
           <OsRecycleBin className="syswin-tico" size={16} />
-          <span className="syswin-tt">Recycle Bin — C:\SHREYOS\cut</span>
+          <span className="syswin-tt" id="bin-dialog-title">Recycle Bin — C:\SHREYOS\cut</span>
           <div className="syswin-btns">
             <button className="win-btn" aria-hidden="true" tabIndex={-1}>_</button>
             <button className="win-btn" aria-hidden="true" tabIndex={-1}>□</button>
@@ -714,7 +730,7 @@ function RecycleBinDialog({ open, onClose }) {
                 <span>deleted {cur.date}</span>
               </div>
               <div className="bin-d-label">Reason for deletion</div>
-              <p className="bin-d-why">{cur.why}</p>
+              <p className="bin-d-why" key={cur.id}>{cur.why}</p>
             </div>
           </div>
         </div>
@@ -790,23 +806,32 @@ function DisplayProperties({ open, onClose, theme, wallpaperId, onApply }) {
     if (open) { setDraftTheme(theme); setDraftWp(BG_IDS.includes(wallpaperId) ? wallpaperId : 'starfield'); setDirty(false); }
   }, [open, theme, wallpaperId]);
 
-  if (!open) return null;
-
   const wp = BG_MODES.find(w => w.id === draftWp) || BG_MODES[0];
 
   const commit = () => { onApply(draftTheme, draftWp); setDirty(false); };
   const onOK   = () => { commit(); onClose(); };
   const onCancel = () => { onClose(); };   // drafts discarded (re-synced on next open)
 
+  useEffect(() => {
+    if (!open) return;
+    const onKey = e => { if (e.key === 'Escape') onCancel(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  if (!open) return null;
+
   const setThemeDraft = (t) => { setDraftTheme(t); setDirty(true); };
   const setWpDraft    = (id) => { setDraftWp(id);  setDirty(true); };
 
   return (
     <div className="dialog-back" onMouseDown={() => { playClick(); onCancel(); }}>
-      <div className="dispprop-dialog" onMouseDown={e => e.stopPropagation()}>
+      <div className="dispprop-dialog" onMouseDown={e => e.stopPropagation()}
+        role="dialog" aria-modal="true" aria-labelledby="dispprop-dialog-title">
         <div className="paint-titlebar">
           <OsDisplaySet className="title-ico-img" size={16} />
-          <span className="paint-title-txt">Display Properties</span>
+          <span className="paint-title-txt" id="dispprop-dialog-title">Display Properties</span>
           <div className="paint-winbtns">
             <button className="win-btn win-close" aria-label="Close" onClick={() => { playClick(); onCancel(); }}>✕</button>
           </div>

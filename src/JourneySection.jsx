@@ -130,6 +130,11 @@ function LossPlot({ prog, live, reduced }) {
   const cvRef = useRef(null);
   const boxRef = useRef(null);
   const colorsR = useRef(null);
+  /* The sync claim ("card and curve are provably locked") is true but was
+     invisible — nothing marked the instant it happened. burstStart tracks
+     when `live` last changed so the marker gets one authored burst exactly
+     then, not a steady glow indistinguishable from the resting state. */
+  const burstStart = useRef(-Infinity);
 
   const draw = useCallback(() => {
     const cv = cvRef.current, box = boxRef.current;
@@ -239,6 +244,20 @@ function LossPlot({ prog, live, reduced }) {
       ctx.setLineDash([2, 2]);
       ctx.beginPath(); ctx.moveTo(x + 0.5, y); ctx.lineTo(x + 0.5, H - PAD.b); ctx.stroke();
       ctx.setLineDash([]);
+      /* One authored burst at the instant this epoch went live — an
+         expanding, fading ring in the same signature color, not a new
+         effect invented for this section. */
+      if (isLive) {
+        const burstT = Math.max(0, Math.min(1, (performance.now() - burstStart.current) / 460));
+        if (burstT < 1) {
+          const ringR = 4.2 + burstT * 13;
+          ctx.save();
+          ctx.globalAlpha = (1 - burstT) * 0.85;
+          ctx.strokeStyle = cSig; ctx.lineWidth = 1.6;
+          ctx.beginPath(); ctx.arc(x, y, ringR, 0, Math.PI * 2); ctx.stroke();
+          ctx.restore();
+        }
+      }
       if (isLive) { ctx.shadowColor = cSig; ctx.shadowBlur = 10; }
       ctx.fillStyle = isLive ? cSig : cTrain;
       ctx.beginPath(); ctx.arc(x, y, isLive ? 4.2 : 2.6, 0, Math.PI * 2); ctx.fill();
@@ -265,6 +284,22 @@ function LossPlot({ prog, live, reduced }) {
   }, [prog, live, reduced]);
 
   useEffect(() => { draw(); }, [draw]);
+
+  /* Drive the burst ring for ~460ms after `live` changes, independent of the
+     scroll-driven draw above — otherwise a visitor who stops scrolling
+     exactly on the transition never sees the ring animate out. */
+  useEffect(() => {
+    if (reduced) return;
+    burstStart.current = performance.now();
+    let raf = 0;
+    const tick = () => {
+      draw();
+      if (performance.now() - burstStart.current < 460) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [live, reduced]);
 
   /* repaint on resize AND on theme flip (canvas can't inherit CSS vars) */
   useEffect(() => {
@@ -432,8 +467,7 @@ export default function JourneySection() {
                 <div className="jn-winbtns">
                   <button className="win-btn" aria-label="Minimize Training Monitor"
                     onClick={() => { playClick(); os.wAction('journey', 'minimize'); }}>_</button>
-                  <button className="win-btn" aria-hidden="true" tabIndex={-1}
-                    onClick={() => playClick()}>□</button>
+                  <button className="win-btn" aria-hidden="true" tabIndex={-1}>□</button>
                   <button className="win-btn win-close" aria-label="Close Training Monitor"
                     onClick={() => { playClick(); os.wAction('journey', 'close'); }}>✕</button>
                 </div>
@@ -496,7 +530,8 @@ export default function JourneySection() {
                             <div className="jn-c-foot">
                               <span>epoch {e.ep} / {EPOCHS.length}</span>
                               <span className="jn-c-loss">
-                                loss <b>{EP_LOSS[i]}</b>{i > 0 ? ' ▼' : ''}
+                                loss <b className="jn-c-loss-num"
+                                  key={d === 0 ? `live-${live}` : 'idle'}>{EP_LOSS[i]}</b>{i > 0 ? ' ▼' : ''}
                               </span>
                             </div>
                           </div>

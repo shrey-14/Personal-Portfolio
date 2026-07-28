@@ -7,6 +7,7 @@
    ═════════════════════════════════════════════════════════════════════════ */
 import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import heroFigureSrc from './assets/hero_figure.png';
+import heroFigureWebp from './assets/hero_figure.webp';
 import ContactWindow from './ContactWindow';
 import {
   useOS, playClick, playWindowOpen, playWhoosh, WIN98, DESKTOP_ICONS, cvHref,
@@ -142,7 +143,7 @@ function WindowChrome({ title, titleIcon, onClose, onMinimize, onTitlebarPointer
             onClick={e => { e.stopPropagation(); playClick(); onMinimize(); }}>_</button>
         )}
         <button className="win-btn" aria-hidden="true" tabIndex={-1}
-          onClick={e => { e.stopPropagation(); playClick(); }}>□</button>
+          onClick={e => e.stopPropagation()}>□</button>
         {onClose && (
           <button className="win-btn win-close" aria-label={`Close ${title}`}
             onClick={e => { e.stopPropagation(); playClick(); onClose(); }}>✕</button>
@@ -376,12 +377,18 @@ function SpotlightFigure() {
     <div className="spot-figure" ref={frameRef}>
       {/* Base layer — grayscale at rest, cross-fades to colour as it docks. */}
       <div className="figlayer fig-base">
-        <img ref={baseImgRef} src={heroFigureSrc} alt="Shrey Patel" className="paint-photo" />
+        <picture>
+          <source srcSet={heroFigureWebp} type="image/webp" />
+          <img ref={baseImgRef} src={heroFigureSrc} alt="Shrey Patel" className="paint-photo" />
+        </picture>
       </div>
       {/* Reveal layer — masked to a soft circle at the cursor; colour/gray
           meaning is set from JS and inverts across the dock. */}
       <div className="figlayer fig-reveal" ref={revealRef} aria-hidden="true">
-        <img ref={revealImgRef} src={heroFigureSrc} alt="" className="paint-photo" />
+        <picture>
+          <source srcSet={heroFigureWebp} type="image/webp" />
+          <img ref={revealImgRef} src={heroFigureSrc} alt="" className="paint-photo" />
+        </picture>
       </div>
     </div>
   );
@@ -392,7 +399,7 @@ function PaintContent({ fx = true }) {
     <>
       <div className="paint-menu">
         {['File','Edit','View','Image','Options','Help'].map(m => (
-          <button key={m} className="paint-menuitem" onClick={playClick}>{m}</button>
+          <button key={m} className="paint-menuitem" aria-hidden="true" tabIndex={-1}>{m}</button>
         ))}
       </div>
       <div className="paint-body">
@@ -400,7 +407,7 @@ function PaintContent({ fx = true }) {
           <div className="paint-tools-grid">
             {TOOLS.map((t, i) => (
               <button key={i} className={`ptool${i === 6 ? ' ptool-active' : ''}`}
-                title={t.name} onClick={playClick}>{t.svg}</button>
+                title={t.name} aria-hidden="true" tabIndex={-1}>{t.svg}</button>
             ))}
           </div>
           <div className="paint-linewidth"><div className="lw-sample" /></div>
@@ -522,7 +529,7 @@ function NotepadContent({ active, instant }) {
     <>
       <div className="paint-menu">
         {['File','Edit','Search','Help'].map(m => (
-          <button key={m} className="paint-menuitem" onClick={playClick}>{m}</button>
+          <button key={m} className="paint-menuitem" aria-hidden="true" tabIndex={-1}>{m}</button>
         ))}
       </div>
       <div className="notepad-headline">
@@ -603,11 +610,20 @@ function PerformanceGraph() {
 function SysPropsContent() {
   const [tab, setTab] = useState('General');
 
+  /* Same scrollIntoView pattern as About's goSkills / Skills' goProjects —
+     a raw <a href="#skills"> hash-jumps instantly and leaves a URL hash,
+     unlike every other "next section" link in the app. */
+  const goSkills = () => {
+    playClick();
+    const t = document.getElementById('skills');
+    if (t) t.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <>
-      <div className="sysprop-tabs">
+      <div className="sysprop-tabs" role="tablist">
         {['General', 'Device Manager', 'Performance'].map(t => (
-          <button key={t}
+          <button key={t} role="tab" aria-selected={tab === t}
             className={`sysprop-tab${tab === t ? ' sysprop-tab-active' : ''}`}
             onClick={() => { playClick(); setTab(t); }}>
             {t}
@@ -635,8 +651,8 @@ function SysPropsContent() {
             </div>
             <div className="sysprop-divider" />
             <div className="sysprop-okrow">
-              <button className="about-ok" onClick={playClick}>OK</button>
-              <button className="about-ok" onClick={playClick}>Cancel</button>
+              <button className="about-ok" aria-hidden="true" tabIndex={-1}>OK</button>
+              <button className="about-ok" aria-hidden="true" tabIndex={-1}>Cancel</button>
             </div>
           </>
         )}
@@ -672,11 +688,9 @@ function SysPropsContent() {
             </div>
           </div>
         )}
-        <a href="#skills"
-          className="dm-open-monitor"
-          onClick={playClick}>
+        <button className="dm-open-monitor" onClick={goSkills}>
           Open System Monitor ↗
-        </a>
+        </button>
       </div>
     </>
   );
@@ -807,11 +821,9 @@ function MobileMenu({ onAction, theme, onToggleTheme, onOpenDisplay, muted, onTo
 
 function MobileHero({ shared }) {
   const { clock, muted, onToggleMute, handleAction, wins, wAction,
-          dialupOpen, dialupPhase, aboutOpen, setAboutOpen, bsodOpen, setBsodOpen,
           contactOpen, setContactOpen,
           reducedMotion,
-          theme, onToggleTheme, onOpenDisplay,
-          displayOpen, setDisplayOpen, wallpaperId, applyDisplay } = shared;
+          theme, onToggleTheme, onOpenDisplay } = shared;
   const [notepadSeen, setNotepadSeen] = useState(false);
   const onNotepadVisible = useCallback(() => setNotepadSeen(true), []);
 
@@ -993,20 +1005,18 @@ function MobileHero({ shared }) {
           </StaticWindow>
         </MobileReveal>
       </section>
-
-      {/* <PixelBuddy mobile /> */}
-
     </div>
   );
-}export default function HeroSection() {
+}
+
+export default function HeroSection() {
   const {
     vp, isMobile, reducedMotion,
-    theme, toggleTheme, wallpaperId, applyDisplay,
+    theme, toggleTheme,
     clock, muted, toggleMute,
-    ctxMenu, setCtxMenu, aboutOpen, setAboutOpen,
-    dialupOpen, dialupPhase, contactOpen, setContactOpen,
-    bsodOpen, setBsodOpen, ssActive, setSsActive,
-    displayOpen, setDisplayOpen,
+    ctxMenu, setCtxMenu,
+    contactOpen, setContactOpen,
+    setDisplayOpen,
     wins, wAction, focusedWin, setFocusedWin, stage, setStage,
     handleAction,
   } = useOS();
@@ -1584,11 +1594,9 @@ function MobileHero({ shared }) {
     return (
       <MobileHero shared={{
         clock, muted, onToggleMute: toggleMute, handleAction, wins, wAction,
-        dialupOpen, dialupPhase, aboutOpen, setAboutOpen, bsodOpen, setBsodOpen,
         contactOpen, setContactOpen,
         reducedMotion,
         theme, onToggleTheme: toggleTheme, onOpenDisplay: () => setDisplayOpen(true),
-        displayOpen, setDisplayOpen, wallpaperId, applyDisplay,
       }} />
     );
   }
@@ -1606,12 +1614,7 @@ function MobileHero({ shared }) {
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseLeave}
     >
-      {/* <StirredGlass wallpaperSrc={activeWallpaper.src || null} theme={theme} nameRef={nameMorphRef} /> */}
-
       <SelectionRect rect={selRect} />
-
-      {/* <HitCounter /> */}
-
 
       {/* Subtitle — fades in under the wordmark once it has shrunk to the top */}
       <div className="hero-subtitle" ref={subtitleRef} aria-hidden="true">AI / ML · LONDON</div>
@@ -1683,9 +1686,6 @@ function MobileHero({ shared }) {
         style={{ width: layout.sysprops.w, opacity: 0, willChange: 'transform, opacity, filter' }}>
         <SysPropsContent />
       </Win95Window>
-
-      {/* <PixelBuddy /> */}
-
     </div>
     </div>
   );

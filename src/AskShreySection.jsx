@@ -65,9 +65,27 @@ function nowTS() {
 function bootTS() { return '00:00:00'; }
 
 const BOOT_MSGS = [
-  { role: 'sys',  text: 'AI.TERMINAL v1.0 — SHREY/OS\nModel: llama-3.3-70b via Groq\n──────────────────────────────\nSession started. Ask anything about Shrey.', ts: bootTS() },
-  { role: 'ai',   text: "Hey — I'm an AI built on everything Shrey has shipped and studied.\n\nAsk me about his projects, skills, background, or whether he'd be the right fit for your team.", ts: '00:00:01' },
+  { role: 'sys',  text: 'AI.TERMINAL v1.0 — SHREY/OS\nModel: llama-3.3-70b via Groq\n──────────────────────────────\nSession started. Ask anything about Shrey. (tip: this is a real shell — try \'help\')', ts: bootTS() },
+  { role: 'ai',   text: "Hey — I'm an AI built on everything Shrey has shipped and studied.\n\nAsk me about his projects, skills, background, or whether he'd be the right fit for your team. I only know what's in his CV — I'll say so if something's outside that.", ts: '00:00:01' },
 ];
+
+/* Local shell commands — answered instantly, client-side, no Groq round-trip.
+   Role stays 'sys' (never 'ai') so it's never mistaken for the model
+   reasoning — this is the terminal itself talking, like a real shell. Exact
+   match only (not substring) so a genuine question containing "help" never
+   misfires. */
+const LOCAL_COMMANDS = {
+  help: "Available commands: help · whoami · ls · neofetch · date · clear\nOr just type a real question — I'll answer from Shrey's CV.",
+  whoami: "shrey — MSc AI @ Brunel University London (2026–27) · BEng IT, LJ Institute (First Class Distinction) · ex-Data Science Intern @ Petpooja · seeking AI/ML placements, London or remote.\ngroups: root(admin), ml(engineer), cv(computer-vision)",
+  ls: "projects/\n├── ai_radar.ts          260+ records/day · Hit@1 100%\n├── kitchen_opt.ipynb    1st place hackathon\n├── road_damage.pt       YOLOv5 · 87% mAP@0.5\n└── contact.card         -> scroll to 07\n\ntry: neofetch",
+  neofetch: "shrey@SHREY-OS\n─────────────────\nOS: SHREY/OS 1.0\nHost: Brunel University London\nKernel: MSc-AI 2026.01\nUptime: 2 shipped ML projects, 1 hackathon win\nShell: /bin/groq\nTerminal: ask.shrey.exe\nCPU: Human Reasoning Engine\nMemory: 800+ pipelines optimised (Petpooja)",
+};
+LOCAL_COMMANDS.dir = LOCAL_COMMANDS.ls;
+const SUDO_REPLY = "shrey is not in the sudoers file. This incident will be reported.\n(kidding — this terminal only reads Shrey's CV, no prod access here. Try a real question.)";
+
+/* Client-side ceiling so a hung Groq call can't leave the terminal disabled
+   forever with only "Clear conversation" (which wipes history) as an out. */
+const FETCH_TIMEOUT_MS = 25_000;
 
 /* ════════════════════════════════════════════════════════════════════════
    SECTION
@@ -147,10 +165,31 @@ export default function AskShreySection() {
   const send = useCallback(async (text) => {
     const q = (text ?? input).trim();
     if (!q || thinking) return;
+    const cmdKey = q.toLowerCase();
+
+    if (cmdKey === 'clear') {
+      playClick();
+      genRef.current += 1;
+      setMsgs(BOOT_MSGS);
+      setInput('');
+      setThinking(false);
+      setStatus('READY');
+      return;
+    }
+
     setInput('');
     playClick();
     const ts = nowTS();
     setMsgs(m => [...m, { role: 'user', text: q, ts }]);
+
+    const localReply = cmdKey === 'date'
+      ? `Local time: ${new Date().toString()}`
+      : (LOCAL_COMMANDS[cmdKey] ?? (cmdKey.startsWith('sudo') ? SUDO_REPLY : null));
+    if (localReply) {
+      setMsgs(m => [...m, { role: 'sys', text: localReply, ts: nowTS() }]);
+      return;
+    }
+
     setThinking(true);
     setStatus('GENERATING...');
 
@@ -171,36 +210,71 @@ export default function AskShreySection() {
         'Tell me about the MSc': "MSc Artificial Intelligence, Brunel University London (Jan 2026 – Apr 2027, in progress).\n\nModules: Machine Learning · Deep Learning · Data Visualisation · Modern Data\n\nBefore: BEng Information Technology, LJ Institute — First Class with Distinction (2021–2025).",
       };
 
+    // Flash the statusbar to an error state, then settle back to READY —
+    // "● ONLINE" must never sit next to a message admitting the request failed.
+    let errored = false;
+    const flagError = () => {
+      errored = true;
+      setStatus('ERROR');
+      setTimeout(() => { if (genRef.current === gen) setStatus('READY'); }, 2200);
+    };
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
     try {
       const res = await fetch(ASK_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: history }),
+        signal: controller.signal,
       });
-      if (!res.ok) throw new Error(`ask ${res.status}`);
+      clearTimeout(timer);
+
+      if (!res.ok) {
+        // A real server response beats the offline demo — never mask a genuine
+        // rate-limit/backend error behind a canned answer that looks scripted.
+        const body = await res.json().catch(() => ({}));
+        if (genRef.current !== gen) return;
+        flagError();
+        setMsgs(m => [...m, {
+          role: 'sys',
+          text: body.error || `Server error (${res.status}). Try again in a moment, or email pshrey964@gmail.com directly.`,
+          ts: nowTS(),
+        }]);
+        return;
+      }
+
       const data = await res.json();
       if (genRef.current !== gen) return;   // conversation was cleared mid-flight
       const ans = String(data.answer || '').trim() || 'No response.';
       setMsgs(m => [...m, { role: 'ai', text: ans, ts: nowTS() }]);
-    } catch {
+    } catch (err) {
+      clearTimeout(timer);
       if (genRef.current !== gen) return;
+      flagError();
+      // Demo fallback is ONLY for the fetch itself failing (endpoint
+      // unreachable — e.g. `npm run dev` without `vercel dev`), never for a
+      // real HTTP error response, which is handled above.
       const demo = DEMO[q];
       if (demo) {
-        // graceful offline mode: the curated answer, after a human beat
         await new Promise(r => setTimeout(r, 500 + q.length * 1.2));
         if (genRef.current !== gen) return;
         setMsgs(m => [...m, { role: 'ai', text: demo, ts: nowTS() }]);
       } else {
+        const timedOut = err?.name === 'AbortError';
         setMsgs(m => [...m, {
           role: 'sys',
-          text: 'Uplink error — the AI endpoint did not respond.\nTry again in a moment, or email pshrey964@gmail.com directly.',
+          text: timedOut
+            ? 'Uplink timeout — the AI endpoint took too long to respond.\nTry again in a moment, or email pshrey964@gmail.com directly.'
+            : 'Uplink error — the AI endpoint did not respond.\nTry again in a moment, or email pshrey964@gmail.com directly.',
           ts: nowTS(),
         }]);
       }
     } finally {
       if (genRef.current === gen) {
         setThinking(false);
-        setStatus('READY');
+        if (!errored) setStatus('READY');
         setTimeout(() => inputRef.current?.focus(), 50);
       }
     }
@@ -245,8 +319,7 @@ export default function AskShreySection() {
             <div className="at-winbtns">
               <button className="win-btn" aria-label="Minimize AI Terminal"
                 onClick={() => { playClick(); os.wAction('aiterminal', 'minimize'); }}>_</button>
-              <button className="win-btn" aria-hidden="true" tabIndex={-1}
-                onClick={playClick}>□</button>
+              <button className="win-btn" aria-hidden="true" tabIndex={-1}>□</button>
               <button className="win-btn win-close" aria-label="Close AI Terminal"
                 onClick={() => { playClick(); os.wAction('aiterminal', 'close'); }}>✕</button>
             </div>
@@ -307,7 +380,9 @@ export default function AskShreySection() {
             <span className="at-sb">{status}</span>
             <span className="at-sb">Groq API</span>
             <span className="at-sb at-sb-grow" />
-            <span className="at-sb at-sb-online">● ONLINE</span>
+            <span className={`at-sb ${status === 'ERROR' ? 'at-sb-error' : 'at-sb-online'}`}>
+              {status === 'ERROR' ? '● UPLINK ERROR' : '● ONLINE'}
+            </span>
           </div>
 
         </div>{/* /at-win */}

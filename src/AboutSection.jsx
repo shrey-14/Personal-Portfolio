@@ -417,11 +417,10 @@ export default function AboutSection() {
             <span className="ab-titletxt">About — Personnel File</span>
             <div className="ab-winbtns">
               <button className="win-btn" aria-label="Minimize About"
-                onClick={() => { playClick(); os.wAction('about', 'minimize'); }}>_</button>
-              <button className="win-btn" aria-hidden="true" tabIndex={-1}
-                onClick={() => playClick()}>□</button>
+                onClick={() => { if (!winCtl) return; playClick(); os.wAction('about', 'minimize'); }}>_</button>
+              <button className="win-btn" aria-hidden="true" tabIndex={-1}>□</button>
               <button className="win-btn win-close" aria-label="Close About"
-                onClick={() => { playClick(); os.wAction('about', 'close'); }}>✕</button>
+                onClick={() => { if (!winCtl) return; playClick(); os.wAction('about', 'close'); }}>✕</button>
             </div>
           </div>
 

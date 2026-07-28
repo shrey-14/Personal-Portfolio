@@ -26,7 +26,6 @@ export default class ErrorBoundary extends Component {
   }
 
   handleRestart = () => {
-    
     window.location.reload();
   };
 
@@ -81,12 +80,12 @@ export default class ErrorBoundary extends Component {
               <details style={{ margin: '10px 0 14px' }}>
                 <summary style={{
                   cursor: 'pointer', fontFamily: '"IBM Plex Mono", monospace',
-                  fontSize: 10, color: '#404040', letterSpacing: '0.04em',
+                  fontSize: 11, color: '#404040', letterSpacing: '0.04em',
                 }}>Technical details</summary>
                 <pre style={{
                   margin: '6px 0 0', padding: '8px 10px',
                   background: '#000', color: '#39ff14',
-                  fontFamily: '"IBM Plex Mono", monospace', fontSize: 10.5,
+                  fontFamily: '"IBM Plex Mono", monospace', fontSize: 11,
                   lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
                   border: '1px solid #000',
                   boxShadow: 'inset 1px 1px 0 rgba(0,0,0,0.4)',

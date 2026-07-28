@@ -108,12 +108,19 @@ export default function ContactWindow({
   const hpRef = useRef(null);                        // honeypot (bots fill it)
   const firstFieldRef = useRef(null);
   const dialogRef = useRef(null);
+  const genRef = useRef(0);         // bumps on open/close — stale send() resolutions discard
+  const openedAtRef = useRef(0);    // for the honeypot's speed check below
 
   const cv = cvHref || CV_FALLBACK;
 
-  // Reset the compose state each time the window opens fresh.
+  // Reset the compose state each time the window opens fresh. Also
+  // invalidates any send() still in flight from a previous open/close —
+  // without this, closing mid-send and reopening quickly could have a late
+  // response silently flip the freshly-reset form to sent/error.
   useEffect(() => {
+    genRef.current += 1;
     if (open) {
+      openedAtRef.current = Date.now();
       setStatus('idle'); setErrText(''); setCopied(false);
       // focus the first field shortly after the open animation
       const t = setTimeout(() => firstFieldRef.current?.focus(), 180);
@@ -160,7 +167,10 @@ export default function ContactWindow({
 
   const send = useCallback(async () => {
     onSound();
-    if (hpRef.current?.value) return;                 // honeypot tripped → silent no-op
+    // A real visitor takes at least ~1.5s to reach Send; only an
+    // implausibly-fast fill (a bot, not a stray autofill on the hidden
+    // field's name) trips the honeypot — silent no-op, same as before.
+    if (hpRef.current?.value && Date.now() - openedAtRef.current < 1500) return;
     if (!emailValid(email)) {
       setStatus('error');
       setErrText('Please enter a valid email so I can reply.');
@@ -168,6 +178,7 @@ export default function ContactWindow({
       return;
     }
     setStatus('sending'); setErrText('');
+    const gen = genRef.current;
 
     const payload = {
       email:   email.trim(),
@@ -187,11 +198,14 @@ export default function ContactWindow({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
+        if (genRef.current !== gen) return;   // closed/reopened while awaiting
         throw new Error(data.error || `Request failed (${res.status})`);
       }
+      if (genRef.current !== gen) return;
       setStatus('sent');
       onSent();
     } catch (err) {
+      if (genRef.current !== gen) return;
       setStatus('error');
       setErrText(
         (err && err.message) ? err.message

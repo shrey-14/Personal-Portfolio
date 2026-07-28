@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   SkillsSection.jsx — "System Monitor.exe"  (SHREY/OS · section 02)
+   SkillsSection.jsx — "System Monitor.exe"  (SHREY/OS · section 03)
    ---------------------------------------------------------------------------
    THEME: this section no longer sets its own data-theme. Your OS writes
    data-theme on <html> (OSContext / hero), so light/dark cascades here for
@@ -8,7 +8,7 @@
    reliably, so `useHtmlTheme` mirrors the <html> value (and live-updates on
    toggle) purely to pick canvas colours.
 
-   App usage:  <FixedComponents><HeroSection/><SkillsSection/></FixedComponents>
+   App usage:  <FixedComponents><HeroSection/><AboutSection/><SkillsSection/></FixedComponents>
    ═════════════════════════════════════════════════════════════════════════ */
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useOS, playClick } from './OSContext';
@@ -64,7 +64,7 @@ function useHtmlTheme(fallback = 'dark') {
    cpu / mem are playful "resource" telemetry (a Task-Manager metaphor,
    deliberately NOT a literal self-graded proficiency score). */
 const GROUPS = [
-  { cat: 'Languages', open: true, items: [
+  { cat: 'Languages', open: false, items: [
     { logo: lPython, name: 'Python', type: 'core', cpu: 95, mem: '214 MB', st: 'active',
       dl: 'Primary language across every project and my Petpooja internship.', meta: ['AI Radar', 'Road Damage', 'Petpooja'] },
     { logo: lSql, name: 'SQL', type: 'data', cpu: 88, mem: '150 MB', st: 'active',
@@ -88,7 +88,7 @@ const GROUPS = [
     { logo: lPandas, name: 'Pandas', type: 'data', cpu: 84, mem: '134 MB', st: 'running',
       dl: 'Data wrangling and analysis across projects and the internship.', meta: ['DataFrames'] },
   ]},
-  { cat: 'Computer Vision & NLP', open: true, items: [
+  { cat: 'Computer Vision & NLP', open: false, items: [
     { logo: lOpencv, name: 'OpenCV', type: 'vision', cpu: 79, mem: '132 MB', st: 'running',
       dl: 'Image processing and augmentation for the road-damage model.', meta: ['Road Damage', 'OpenCV'] },
     { logo: lYolo, name: 'YOLOv5 / v8', type: 'vision', cpu: 83, mem: '144 MB', st: 'active',
@@ -98,7 +98,7 @@ const GROUPS = [
     { logo: lNltk, name: 'NLTK', type: 'nlp', cpu: 70, mem: '82 MB', st: 'bg',
       dl: 'Tokenisation and language processing for prompt / OCR pipelines.', meta: ['NLP', 'Petpooja'] },
   ]},
-  { cat: 'LLMs · Backend · APIs', open: true, items: [
+  { cat: 'LLMs · Backend · APIs', open: false, items: [
     { logo: lFastapi, name: 'FastAPI', type: 'backend', cpu: 85, mem: '126 MB', st: 'active',
       dl: 'Async Python API serving the AI Radar backend.', meta: ['AI Radar', 'REST'] },
     { logo: lNext, name: 'Next.js', type: 'web', cpu: 77, mem: '118 MB', st: 'running',
@@ -313,7 +313,7 @@ export default function SkillsSection() {
       ctx.globalAlpha = 1;
       ctx.fillStyle = 'rgb(' + sig.join(',') + ')'; ctx.font = '700 11px "IBM Plex Mono",monospace'; ctx.textAlign = 'center';
       ctx.fillText(Math.round(a.v * progress) + '%', cx, top + dy - 4);
-      ctx.fillStyle = dim; ctx.font = '9px "IBM Plex Sans",sans-serif';
+      ctx.fillStyle = dim; ctx.font = '11px "IBM Plex Sans",sans-serif';
       const wds = a.n.split(' ');
       if (wds.length > 2) { ctx.fillText(wds.slice(0, 2).join(' '), cx, h - 18); ctx.fillText(wds.slice(2).join(' '), cx, h - 8); }
       else ctx.fillText(a.n, cx, h - 12);
@@ -362,9 +362,14 @@ export default function SkillsSection() {
   const toggleGroup = gi => { playClick(); setOpen(o => o.map((v, i) => (i === gi ? !v : v))); };
   const clickSort = k => {
     playClick();
-    if (k === 'type' || k === 'st') return;
     if (sortKey === k) setSortDir(d => -d);
     else { setSortKey(k); setSortDir(k === 'cpu' ? -1 : 1); }
+  };
+  /* Enter/Space activation for the div/span elements below that carry click
+     handlers but aren't real buttons — keeps their existing layout/CSS
+     untouched while making them keyboard-operable. */
+  const keyActivate = fn => e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); }
   };
   const sortItems = items => [...items].sort((a, b) => {
     if (sortKey === 'cpu') return (a.cpu - b.cpu) * sortDir;
@@ -402,11 +407,10 @@ export default function SkillsSection() {
           <span className="sk-titletxt">System Monitor</span>
           <div className="sk-winbtns">
             <button className="win-btn" aria-label="Minimize System Monitor"
-              onClick={() => { playClick(); os.wAction('sysmonitor', 'minimize'); }}>_</button>
-            <button className="win-btn" aria-hidden="true" tabIndex={-1}
-              onClick={() => playClick()}>□</button>
+              onClick={() => { if (!winCtl) return; playClick(); os.wAction('sysmonitor', 'minimize'); }}>_</button>
+            <button className="win-btn" aria-hidden="true" tabIndex={-1}>□</button>
             <button className="win-btn win-close" aria-label="Close System Monitor"
-              onClick={() => { playClick(); os.wAction('sysmonitor', 'close'); }}>✕</button>
+              onClick={() => { if (!winCtl) return; playClick(); os.wAction('sysmonitor', 'close'); }}>✕</button>
           </div>
         </div>
 
@@ -416,35 +420,45 @@ export default function SkillsSection() {
           <span className="sk-rate"><span className="sk-rate-dot" />Update speed: High</span>
         </div>
 
-        <div className="sk-tabs">
+        <div className="sk-tabs" role="tablist">
           {[['proc', 'Processes'], ['perf', 'Performance']].map(([id, lbl]) => (
-            <button key={id} className={`sk-tab${tab === id ? ' sk-tab-active' : ''}`} onClick={() => { playClick(); setTab(id); }}>{lbl}</button>
+            <button key={id} role="tab" aria-selected={tab === id}
+              className={`sk-tab${tab === id ? ' sk-tab-active' : ''}`} onClick={() => { playClick(); setTab(id); }}>{lbl}</button>
           ))}
         </div>
 
         <div className="sk-body">
           {tab === 'proc' && (
-            <>
+            <div className="sk-tab-panel">
               <div className="sk-proc-head">
-                <span onClick={() => clickSort('name')}>Image Name{caret('name')}</span>
-                <span className="sk-c-type" onClick={() => clickSort('type')}>Type</span>
-                <span className="sk-c-num" onClick={() => clickSort('cpu')}>CPU{caret('cpu')}</span>
-                <span className="sk-c-num sk-c-mem" onClick={() => clickSort('mem')}>Mem{caret('mem')}</span>
-                <span onClick={() => clickSort('st')}>Status</span>
+                <span role="button" tabIndex={0} aria-label={`Sort by name${caret('name')}`}
+                  onClick={() => clickSort('name')} onKeyDown={keyActivate(() => clickSort('name'))}>
+                  Image Name{caret('name')}</span>
+                <span className="sk-c-type sk-col-static">Type</span>
+                <span className="sk-c-num" role="button" tabIndex={0} aria-label={`Sort by CPU${caret('cpu')}`}
+                  onClick={() => clickSort('cpu')} onKeyDown={keyActivate(() => clickSort('cpu'))}>
+                  CPU{caret('cpu')}</span>
+                <span className="sk-c-num sk-c-mem" role="button" tabIndex={0} aria-label={`Sort by memory${caret('mem')}`}
+                  onClick={() => clickSort('mem')} onKeyDown={keyActivate(() => clickSort('mem'))}>
+                  Mem{caret('mem')}</span>
+                <span className="sk-col-static">Status</span>
               </div>
               <div className="sk-scroll">
                 {GROUPS.map((g, gi) => (
                   <div key={g.cat}>
-                    <div className="sk-grp" onClick={() => toggleGroup(gi)}>
+                    <div className="sk-grp" role="button" tabIndex={0} aria-expanded={open[gi]}
+                      onClick={() => toggleGroup(gi)} onKeyDown={keyActivate(() => toggleGroup(gi))}>
                       <span className="sk-tw">{open[gi] ? '▼' : '►'}</span>{g.cat}
                       <span className="sk-cnt">{g.items.length} processes</span>
                     </div>
                     {open[gi] && sortItems(g.items).map(it => {
                       const key = gi + ':' + it.name;
                       const isSel = selRow === key;
+                      const selectRow = () => { playClick(); setSelRow(isSel ? null : key); };
                       return (
                         <div key={key}>
-                          <div className={`sk-row${isSel ? ' sk-sel' : ''}`} onClick={() => { playClick(); setSelRow(isSel ? null : key); }}>
+                          <div className={`sk-row${isSel ? ' sk-sel' : ''}`} role="button" tabIndex={0} aria-expanded={isSel}
+                            onClick={selectRow} onKeyDown={keyActivate(selectRow)}>
                             <div className="sk-nm">
                               <span className="sk-ico"><img src={it.logo} alt="" loading="lazy" /></span>
                               <span className="sk-nm-txt">{it.name}</span>
@@ -478,11 +492,11 @@ export default function SkillsSection() {
                   </div>
                 ))}
               </div>
-            </>
+            </div>
           )}
 
           {tab === 'perf' && (
-            <div className="sk-perf">
+            <div className="sk-tab-panel sk-perf">
               <div className="sk-panel">
                 <h4><span className="sk-ld" />CPU usage history · neural activity</h4>
                 <div className="sk-scope"><canvas ref={cpuRef} /></div>

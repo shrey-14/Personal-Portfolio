@@ -62,6 +62,24 @@ button {
   background: var(--desktop-bg);
 }
 
+/* Boot→desktop mount: drawGate (CRTBootAnimation) already fades its last
+   frame to this exact --desktop-bg colour, so the swap is already
+   colour-seamless — this just softens the OS content (taskbar, icons, hero)
+   popping in at full opacity the instant it mounts. Opacity ONLY, never
+   transform: a transform here would create a new containing block for
+   every position:fixed element inside (cursor, taskbar, overlays), breaking
+   their viewport-relative positioning. */
+.os-mount-in {
+  animation: osMountIn 0.4s ease both;
+}
+@keyframes osMountIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .os-mount-in { animation: none; }
+}
+
 /* Custom cursor is toggled via a body class (only added on fine pointers) so
    touch devices keep their native cursor and never end up with a hidden one. */
 body.cursor-hidden,
@@ -69,10 +87,16 @@ body.cursor-hidden * {
   cursor: none !important;
 }
 
-/* Global focus-visible ring — keyboard users can see where they are. */
+/* Global focus-visible ring — keyboard users can see where they are.
+   Themed to --accent (not a flat white dotted line): white read fine on the
+   dark desktop backdrop but was near-invisible against light theme's silver
+   chrome (#c0c0c0) and white fields (#fff). The dark outline-offset shadow
+   keeps it legible on light AND dark chrome without needing per-surface
+   overrides. */
 :focus-visible {
-  outline: 2px dotted #fff;
+  outline: 2px dotted var(--accent, #e89020);
   outline-offset: 1px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
 }
 
 /* ── CRT boot keyframes ───────────────────────────────────────────────────── */
@@ -328,7 +352,7 @@ body.cursor-hidden * {
 }
 .hc-label {
   font-family: var(--f-mono);
-  font-size: 8px;
+  font-size: 11px;
   color: #00cc00;
   white-space: nowrap;
   letter-spacing: 0.04em;
@@ -598,7 +622,7 @@ body.cursor-hidden * {
   font-size: 11px;
   color: rgba(255, 255, 255, 0.5);
   letter-spacing: 0.08em;
-  cursor: default;
+  cursor: pointer;
   animation: hintBounce 2s ease-in-out infinite;
 }
 .scroll-hint:hover {
@@ -803,7 +827,7 @@ body.cursor-hidden * {
   border-left-color: var(--chrome-lt);
   border-right-color: var(--chrome-dk);
   border-bottom-color: var(--chrome-dk);
-  font-size: 9px;
+  font-size: 11px;
   font-family: var(--f-sys);
   color: #000;
   display: flex;
@@ -817,6 +841,16 @@ body.cursor-hidden * {
   border-left-color: var(--chrome-dk);
   border-right-color: var(--chrome-lt);
   border-bottom-color: var(--chrome-lt);
+}
+/* Decorative-only window buttons (the inert "maximize" glyph, and the fully
+   static ContactSection titlebar trio) drop the raised bevel entirely — in
+   a bevel-only depth language, a flat border reads as non-interactive by
+   construction, so it no longer visually competes with the two live
+   controls next to it. */
+.win-btn[aria-hidden="true"] {
+  border-color: var(--chrome-dk);
+  color: var(--win-text-dim, #808080);
+  cursor: default;
 }
 .win-close:hover {
   background: #c0392b;
@@ -957,6 +991,11 @@ body.cursor-hidden * {
   position: absolute;
   inset: 0;
 }
+/* <picture> is a layout no-op — .paint-photo's 100%/100% must resolve
+   against .figlayer exactly as it did with a bare <img>. */
+.figlayer picture {
+  display: contents;
+}
 .paint-photo {
   position: absolute;
   inset: 0;
@@ -1062,7 +1101,7 @@ body.cursor-hidden * {
 }
 .pcam-txt {
   font-family: var(--f-mono);
-  font-size: 8px;
+  font-size: 11px;
   color: rgba(255, 255, 255, 0.6);
   letter-spacing: 0.1em;
 }
@@ -1084,7 +1123,7 @@ body.cursor-hidden * {
   border-left-color: var(--chrome-lt);
   border-right-color: var(--chrome-dk);
   border-bottom-color: var(--chrome-dk);
-  font-size: 7px;
+  font-size: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1206,7 +1245,7 @@ body.cursor-hidden * {
 .paint-statusbar {
   background: var(--chrome);
   font-family: var(--f-sys);
-  font-size: 10px;
+  font-size: 11px;
   color: #000;
   padding: 2px 6px;
   border-top: 1px solid var(--chrome-lt);
@@ -1267,7 +1306,7 @@ body.cursor-hidden * {
 .notepad-status {
   background: var(--chrome);
   font-family: var(--f-sys);
-  font-size: 10px;
+  font-size: 11px;
   color: #000;
   padding: 2px 6px;
   border-top: 1px solid var(--chrome-dk);
@@ -1294,7 +1333,7 @@ body.cursor-hidden * {
   border-right-color: var(--chrome-dk);
   border-bottom-color: var(--chrome-dk);
   font-family: var(--f-sys);
-  font-size: 10px;
+  font-size: 11px;
   cursor: default;
   position: relative;
   white-space: nowrap;
@@ -1335,7 +1374,7 @@ body.cursor-hidden * {
 }
 .sysprop-reg {
   font-family: var(--f-sys);
-  font-size: 10px;
+  font-size: 11px;
   color: #000;
 }
 .sysprop-divider {
@@ -1352,7 +1391,7 @@ body.cursor-hidden * {
   display: flex;
   gap: 6px;
   font-family: var(--f-sys);
-  font-size: 10px;
+  font-size: 11px;
   color: #000;
 }
 .spec-key {
@@ -1381,7 +1420,7 @@ body.cursor-hidden * {
 }
 .dm-cat {
   font-family: var(--f-sys);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: bold;
   color: #000;
   padding: 1px 0;
@@ -1394,7 +1433,7 @@ body.cursor-hidden * {
 }
 .dm-name {
   font-family: var(--f-sys);
-  font-size: 10px;
+  font-size: 11px;
   width: 108px;
   flex-shrink: 0;
 }
@@ -1424,7 +1463,7 @@ body.cursor-hidden * {
 }
 .dm-pct {
   font-family: var(--f-sys);
-  font-size: 10px;
+  font-size: 11px;
   width: 28px;
   text-align: right;
   flex-shrink: 0;
@@ -1433,12 +1472,15 @@ body.cursor-hidden * {
 .dm-open-monitor {
   display: inline-block;
   margin-top: 8px;
+  background: none;
+  border: none;
+  border-bottom: 1px dashed var(--sk-sig);
+  padding: 0 0 1px;
+  cursor: pointer;
   font-family: var(--f-sys);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--sk-sig);
   text-decoration: none;
-  border-bottom: 1px dashed var(--sk-sig);
-  padding-bottom: 1px;
 }
 .dm-open-monitor:hover {
   color: var(--sk-sig);
@@ -1463,7 +1505,7 @@ body.cursor-hidden * {
 }
 .perf-label {
   font-family: var(--f-sys);
-  font-size: 10px;
+  font-size: 11px;
   color: #000;
   text-align: center;
 }
@@ -1494,7 +1536,7 @@ body.cursor-hidden * {
 }
 .eq-label {
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   color: rgba(255, 255, 255, 0.55);
   margin-left: 4px;
   align-self: center;
@@ -1519,7 +1561,7 @@ body.cursor-hidden * {
 }
 .setup-label {
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.08em;
   color: #000;
 }
@@ -1542,7 +1584,7 @@ body.cursor-hidden * {
 }
 .setup-count {
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   color: #000;
   min-width: 20px;
   text-align: right;
@@ -1606,7 +1648,7 @@ body.cursor-hidden * {
   color: #fff;
 }
 .ctx-arrow {
-  font-size: 8px;
+  font-size: 11px;
 }
 .ctx-div {
   height: 1px;
@@ -1726,7 +1768,7 @@ body.cursor-hidden * {
 }
 .dialup-speed {
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: #000080;
 }
 .dialup-status {
@@ -1770,7 +1812,7 @@ body.cursor-hidden * {
 }
 .dialup-hint {
   font-family: var(--f-sys);
-  font-size: 10px;
+  font-size: 11px;
   color: #808080;
   text-align: center;
 }
@@ -1985,7 +2027,8 @@ body.cursor-hidden * {
   align-items: center;
   gap: 4px;
   font-family: var(--f-sys);
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: bold;
   color: #000;
 }
 .tray-dot {
@@ -2000,9 +2043,12 @@ body.cursor-hidden * {
   height: 14px;
 }
 .tray-clock {
+  display: flex;
+  align-items: center;
   font-family: var(--f-sys);
   font-size: 11px;
   color: #000;
+  font-weight: bold;
   white-space: nowrap;
 }
 
@@ -3389,7 +3435,10 @@ body.cursor-hidden * {
   background: var(--win-face);
 }
 .mail-sent-icon {
-  animation: mailPop 0.35s cubic-bezier(0.2, 1.4, 0.5, 1) both;
+  /* Previously had a genuine spring/overshoot curve here — the one
+     animation in the codebase not using the site's own confident ease-out
+     (--ease-window). Same duration, natural deceleration now instead. */
+  animation: mailPop 0.35s var(--ease-window, cubic-bezier(0.16, 1, 0.3, 1)) both;
 }
 @keyframes mailPop {
   from {
@@ -3705,6 +3754,32 @@ body.cursor-hidden * {
   .win-btn {
     width: 20px;
     height: 18px;
+    position: relative;
+  }
+  /* Titlebar controls sit 2-3px apart everywhere (sk/ab/pj/jn/pw/at/ct/syswin
+     all reuse .win-btn) — on a real touchscreen that's Minimize and Close
+     fighting for the same fingertip. Widen the row first, then give each
+     live control an invisible hit zone that bleeds outward (top/bottom/outer
+     edge) but stops just short of its neighbor, so the two can't steal each
+     other's taps. The 20x18 glyph itself never changes size. */
+  .paint-winbtns, .sk-winbtns, .ab-winbtns, .pj-winbtns, .jn-winbtns,
+  .pw-winbtns, .at-winbtns, .ct-winbtns, .syswin-btns {
+    gap: 6px;
+  }
+  .win-btn[aria-label^="Minimize"]::before,
+  .win-close::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    bottom: -6px;
+  }
+  .win-btn[aria-label^="Minimize"]::before {
+    left: -8px;
+    right: -1px;
+  }
+  .win-close::before {
+    left: -1px;
+    right: -8px;
   }
 }
 
@@ -3938,6 +4013,9 @@ body.cursor-hidden * {
 [data-theme="dark"] .win-btn {
   color: var(--win-text);
   background: var(--chrome);
+}
+[data-theme="dark"] .win-btn[aria-hidden="true"] {
+  color: var(--win-text-dim);
 }
 
 /* ── Paint: File/Edit/View menu items + statusbar ─────────────────────── */
@@ -4254,241 +4332,7 @@ body.cursor-hidden * {
 }
 
 /* ── PIXEL BUDDY ──────────────────────────────────────────────────────────── */
-.pixel-buddy {
-  position: fixed;
-  left: 0;
-  bottom: 38px; /* stands ON the taskbar */
-  z-index: 60; /* above desktop content, below dialogs(800+) */
-  width: 34px;
-  pointer-events: none; /* only the hit area is clickable */
-  opacity: 0;
-  transition: opacity 0.5s ease 0.4s;
-  will-change: transform;
-}
-.pixel-buddy.buddy-in {
-  opacity: 1;
-}
-.buddy-hit {
-  pointer-events: auto;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  display: block;
-}
-.buddy-img {
-  display: block;
-  height: 96px;
-  width: auto;
-  image-rendering: pixelated;
-  transform-origin: 50% 100%;
-  animation: buddyBob 2.6s ease-in-out infinite;
-  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
-}
-.buddy-flip {
-  scale: -1 1;
-}
-.buddy-shadow {
-  position: absolute;
-  left: 50%;
-  bottom: -3px;
-  width: 40px;
-  height: 7px;
-  transform: translateX(-50%);
-  background: radial-gradient(
-    ellipse at center,
-    rgba(0, 0, 0, 0.3),
-    rgba(0, 0, 0, 0) 70%
-  );
-}
 
-/* State animations — all transform-only, all cheap. */
-@keyframes buddyBob {
-  0%,
-  100% {
-    transform: translateY(0) scaleY(1);
-  }
-  50% {
-    transform: translateY(-2px) scaleY(1.012);
-  }
-}
-.pixel-buddy-walk .buddy-img {
-  animation: buddyWalk 0.32s linear infinite;
-}
-@keyframes buddyWalk {
-  0%,
-  100% {
-    transform: translateY(0) rotate(-2deg);
-  }
-  25% {
-    transform: translateY(-4px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(0) rotate(2deg);
-  }
-  75% {
-    transform: translateY(-4px) rotate(0deg);
-  }
-}
-.pixel-buddy-stretch .buddy-img {
-  animation: buddyStretch 1.1s ease-in-out 1;
-}
-@keyframes buddyStretch {
-  0%,
-  100% {
-    transform: scaleY(1) scaleX(1);
-  }
-  35% {
-    transform: scaleY(1.07) scaleX(0.96) translateY(-3px);
-  }
-  60% {
-    transform: scaleY(0.96) scaleX(1.04);
-  }
-}
-.pixel-buddy-watch .buddy-img {
-  animation: buddyWatch 1.5s ease-in-out 1;
-}
-@keyframes buddyWatch {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-  30%,
-  70% {
-    transform: rotate(-5deg) translateY(-1px);
-  }
-}
-.pixel-buddy-sleep .buddy-img {
-  animation: buddySleep 3.6s ease-in-out infinite;
-  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35)) brightness(0.9);
-}
-@keyframes buddySleep {
-  0%,
-  100% {
-    transform: translateY(1px) rotate(3deg) scaleY(0.97);
-  }
-  50% {
-    transform: translateY(2px) rotate(3deg) scaleY(0.99);
-  }
-}
-.pixel-buddy-typing .buddy-img {
-  animation: buddyType 0.42s ease-in-out infinite;
-}
-@keyframes buddyType {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-2px) rotate(-1.2deg);
-  }
-}
-.pixel-buddy-dizzy .buddy-img {
-  animation: buddyDizzy 0.55s linear 4;
-}
-@keyframes buddyDizzy {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-.pixel-buddy-panic .buddy-img {
-  animation: buddyPanic 0.14s linear infinite;
-}
-@keyframes buddyPanic {
-  0%,
-  100% {
-    transform: translateX(-2px);
-  }
-  50% {
-    transform: translateX(2px);
-  }
-}
-.pixel-buddy-wave .buddy-img {
-  animation: buddyWave 0.45s ease-in-out 2;
-}
-@keyframes buddyWave {
-  0%,
-  100% {
-    transform: rotate(0deg) translateY(0);
-  }
-  50% {
-    transform: rotate(-6deg) translateY(-4px);
-  }
-}
-
-/* Speech bubble — a Win95 tooltip, theme-token driven. */
-.buddy-bubble {
-  position: absolute;
-  bottom: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%);
-  white-space: nowrap;
-  padding: 4px 9px;
-  background: var(--field-bg, #fffbe6);
-  color: var(--field-text, #000);
-  border: 1px solid #000;
-  box-shadow:
-    2px 2px 0 rgba(0, 0, 0, 0.3),
-    inset 1px 1px 0 var(--win-lt, #fff);
-  font-family: var(--f-sys);
-  font-size: 11px;
-  animation: bubbleIn 0.16s ease-out;
-  pointer-events: none;
-}
-[data-theme="light"] .buddy-bubble,
-.desktop:not([data-theme="dark"]) .buddy-bubble {
-  background: #fffbe6;
-  color: #000;
-}
-@keyframes bubbleIn {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-.buddy-bubble-tail {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  margin-left: -4px;
-  border: 4px solid transparent;
-  border-top-color: #000;
-}
-
-/* Mobile: smaller, above the mobile taskbar, right-hand side (thumb-reachable
-   but out of the content's way). All idle life + tap reactions still run. */
-.pixel-buddy-mobile {
-  bottom: calc(40px + env(safe-area-inset-bottom, 0px));
-  z-index: 90;
-}
-.pixel-buddy-mobile .buddy-img {
-  height: 64px;
-}
-.pixel-buddy-mobile .buddy-bubble {
-  font-size: 10.5px;
-}
-
-/* Reduced motion: buddy stands still (no animations), bubbles still appear. */
-@media (prefers-reduced-motion: reduce) {
-  .buddy-img,
-  .pixel-buddy-walk .buddy-img,
-  .pixel-buddy-stretch .buddy-img,
-  .pixel-buddy-watch .buddy-img,
-  .pixel-buddy-sleep .buddy-img,
-  .pixel-buddy-typing .buddy-img,
-  .pixel-buddy-dizzy .buddy-img,
-  .pixel-buddy-panic .buddy-img,
-  .pixel-buddy-wave .buddy-img {
-    animation: none;
-  }
-}
 
 /* ── Dark theme: stragglers that still had hardcoded black text ────────────── */
 [data-theme="dark"] .setup-count,
@@ -4728,27 +4572,6 @@ body.cursor-hidden * {
   position: relative;
 }
 
-/* hero wordmark tail, parallaxed out by --sk-p (0 → 1 as it scrolls in) */
-.sk-ghost {
-  height: 92px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  overflow: hidden;
-  user-select: none;
-  pointer-events: none;
-  font-family: var(--f-display);
-  font-weight: 700;
-  font-size: 118px;
-  line-height: 0.8;
-  color: transparent;
-  -webkit-text-stroke: 1.5px rgba(240, 242, 245, 0.1);
-  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 86%);
-  mask-image: linear-gradient(to bottom, transparent, #000 86%);
-  transform: translateY(calc((1 - var(--sk-p, 0)) * 34px));
-  opacity: calc(0.35 + var(--sk-p, 0) * 0.65);
-}
-
 /* section break */
 .sk-break {
   max-width: 1080px;
@@ -4892,7 +4715,7 @@ body.cursor-hidden * {
 }
 .sk-menubar .sk-rate {
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--win-text-dim);
   display: flex;
   align-items: center;
@@ -4959,6 +4782,20 @@ body.cursor-hidden * {
   min-height: 392px;
 }
 
+/* Processes/Performance switch — was an instant swap, now settles in like
+   every other panel-content change in the OS (state-change tier, not a
+   focal moment: short duration, no stagger). */
+.sk-tab-panel {
+  animation: skTabIn 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes skTabIn {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sk-tab-panel { animation: none; }
+}
+
 /* ── PROCESSES ── */
 .sk-proc-head {
   display: grid;
@@ -4968,7 +4805,7 @@ body.cursor-hidden * {
   background: var(--desktop-bg-2);
   border: 1px solid var(--chrome-dk);
   font-family: var(--f-sys);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   color: #c9cfd6;
   letter-spacing: 0.4px;
@@ -4982,6 +4819,13 @@ body.cursor-hidden * {
 }
 .sk-proc-head > span:hover {
   color: var(--sk-sig);
+}
+/* Type/Status aren't sortable — plain labels, not a false sort affordance */
+.sk-proc-head > span.sk-col-static {
+  cursor: default;
+}
+.sk-proc-head > span.sk-col-static:hover {
+  color: inherit;
 }
 .sk-c-num {
   justify-content: flex-end;
@@ -5019,20 +4863,20 @@ body.cursor-hidden * {
   cursor: pointer;
   letter-spacing: 0.3px;
   font-family: var(--f-sys);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   color: #e7ebef;
 }
 .sk-tw {
   color: var(--sk-sig);
-  font-size: 9px;
+  font-size: 11px;
   width: 9px;
 }
 .sk-cnt {
   margin-left: auto;
   color: #aeb6bf;
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 400;
 }
 
@@ -5087,7 +4931,7 @@ body.cursor-hidden * {
 
 .sk-ty {
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   color: var(--win-text-dim);
   white-space: nowrap;
   overflow: hidden;
@@ -5113,7 +4957,7 @@ body.cursor-hidden * {
 }
 .sk-pc {
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--sk-sig);
   font-weight: 700;
   width: 26px;
@@ -5121,7 +4965,7 @@ body.cursor-hidden * {
 }
 .sk-mem {
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 11px;
   text-align: right;
   color: var(--field-text);
 }
@@ -5130,7 +4974,7 @@ body.cursor-hidden * {
   align-items: center;
   gap: 5px;
   font-family: var(--f-sys);
-  font-size: 9px;
+  font-size: 11px;
   color: var(--win-text-dim);
 }
 .sk-sd {
@@ -5150,16 +4994,19 @@ body.cursor-hidden * {
 }
 
 .sk-drawer {
-  padding: 9px 10px 10px 20px;
+  padding: 9px 10px 10px 10px;
   margin-top: 4px;
   background: var(--desktop-bg);
-  border-left: 3px solid var(--sk-sig);
+  border: 1px solid var(--win-dk);
+  box-shadow: inset 1px 1px 0 var(--win-lt);
+  border-radius: 2px;
 }
 .sk-dl {
   font-family: var(--f-body);
   font-size: 11.5px;
   color: var(--win-text);
   line-height: 1.5;
+  user-select: text;
 }
 .sk-meta {
   display: flex;
@@ -5169,7 +5016,7 @@ body.cursor-hidden * {
 }
 .sk-chip {
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   color: var(--sk-sig);
   border: 1px solid var(--sk-sig-glow);
   border-radius: 2px;
@@ -5191,7 +5038,7 @@ body.cursor-hidden * {
 .sk-panel h4 {
   margin: 0 0 8px;
   font-family: var(--f-sys);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   color: #c9cfd6;
   letter-spacing: 0.6px;
@@ -5252,7 +5099,7 @@ body.cursor-hidden * {
   justify-content: space-between;
   gap: 8px;
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 11px;
   border-bottom: 1px dotted rgba(128, 128, 128, 0.3);
   padding-bottom: 2px;
 }
@@ -5266,7 +5113,7 @@ body.cursor-hidden * {
 .sk-learn {
   margin-top: 9px;
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--win-text-dim);
 }
 .sk-learn b {
@@ -5297,7 +5144,7 @@ body.cursor-hidden * {
 .sk-dcard h4 {
   margin: 0 0 9px;
   font-family: var(--f-sys);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   color: #c9cfd6;
   letter-spacing: 0.6px;
@@ -5322,7 +5169,7 @@ body.cursor-hidden * {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 9px;
+  font-size: 11px;
   margin-top: 1px;
 }
 .sk-dt {
@@ -5342,7 +5189,7 @@ body.cursor-hidden * {
   display: inline-block;
   margin-top: 5px;
   font-family: var(--f-mono);
-  font-size: 8.5px;
+  font-size: 11px;
   color: var(--sk-sig);
   border: 1px solid var(--sk-sig-glow);
   border-radius: 2px;
@@ -5384,7 +5231,7 @@ body.cursor-hidden * {
 }
 .sk-sb {
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--win-text-dim);
   padding: 4px 10px;
   border: 1px solid;
@@ -5461,10 +5308,6 @@ body.cursor-hidden * {
   .sk-in .sk-crt {
     animation: none;
   }
-  .sk-ghost {
-    transform: none;
-    opacity: 0.6;
-  }
 }
 
 /* ── responsive ── */
@@ -5486,10 +5329,6 @@ body.cursor-hidden * {
   }
   .sk-title {
     font-size: 32px;
-  }
-  .sk-ghost {
-    font-size: 74px;
-    height: 70px;
   }
 }
 /* ── Persistent OS layer (FixedComponents) — hosts desktop icons above every
@@ -5775,7 +5614,7 @@ body {
 .dp-wp-desc {
   display: block;
   font-style: normal;
-  font-size: 9px;
+  font-size: 11px;
   opacity: 0.6;
   margin-top: 1px;
 }
@@ -6083,7 +5922,7 @@ body {
 }
 .ab-menubar .ab-rate {
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--win-text-dim);
   display: flex;
   align-items: center;
@@ -6228,7 +6067,7 @@ body {
   background: var(--desktop-bg-2);
   border: 1px solid var(--chrome-dk);
   font-family: var(--f-sys);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   color: #c9cfd6;
   letter-spacing: 0.4px;
@@ -6238,7 +6077,7 @@ body {
 }
 .ab-ph-meta {
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   color: #aeb6bf;
   font-weight: 400;
 }
@@ -6265,20 +6104,20 @@ body {
   letter-spacing: 0.3px;
   margin-bottom: 8px;
   font-family: var(--f-sys);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   color: #e7ebef;
 }
 .ab-tw {
   color: var(--ab-sig);
-  font-size: 9px;
+  font-size: 11px;
   width: 9px;
 }
 .ab-cnt {
   margin-left: auto;
   color: #aeb6bf;
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 400;
 }
 
@@ -6301,7 +6140,7 @@ body {
 }
 .ab-k {
   font-family: var(--f-mono);
-  font-size: 9.5px;
+  font-size: 11px;
   color: var(--win-text-dim);
   letter-spacing: 0.4px;
   flex: 0 0 124px;
@@ -6309,6 +6148,7 @@ body {
 }
 .ab-v {
   flex: 1;
+  user-select: text;
 }
 .ab-v-hl {
   color: var(--ab-sig);
@@ -6342,7 +6182,7 @@ body {
 }
 .ab-mk {
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   color: var(--win-text-dim);
   flex: 1;
 }
@@ -6383,13 +6223,13 @@ body {
 }
 .ab-pk {
   font-family: var(--f-mono);
-  font-size: 8.5px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.8px;
   color: var(--ab-sig-ink);
   background: var(--ab-sig);
   padding: 3px 6px;
-  flex: 0 0 72px;
+  flex: 0 0 84px;
   text-align: center;
   margin-top: 1px;
 }
@@ -6410,6 +6250,7 @@ body {
   font-size: 12px;
   line-height: 1.7;
   color: var(--field-text);
+  user-select: text;
 }
 .ab-prose p {
   margin: 0 0 9px;
@@ -6491,7 +6332,7 @@ body {
 }
 .ab-sb {
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--win-text-dim);
   padding: 4px 10px;
   border: 1px solid;
@@ -6637,7 +6478,7 @@ body {
     margin-bottom: 10px;
   }
   .ab-sub {
-    font-size: 10px;
+    font-size: 11px;
   }
   .ab-body {
     padding: 8px;
@@ -6655,7 +6496,7 @@ body {
     display: none;
   }
   .ab-tab {
-    font-size: 10px;
+    font-size: 11px;
     padding: 4px 10px 5px;
     flex: 0 0 auto;
   }
@@ -6668,14 +6509,14 @@ body {
   }
   .ab-k {
     flex: 0 0 100%;
-    font-size: 9px;
+    font-size: 11px;
   }
   .ab-metrics {
     grid-template-columns: repeat(2, 1fr);
   }
   .ab-pk {
-    flex: 0 0 64px;
-    font-size: 8px;
+    flex: 0 0 76px;
+    font-size: 11px;
   }
   .ab-menubar .ab-rate {
     display: none;
@@ -6949,7 +6790,7 @@ body.pj-booting .taskbar {
   background: var(--desktop-bg-2);
   border: 1px solid var(--chrome-dk);
   font-family: var(--f-sys);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   color: #c9cfd6;
   letter-spacing: 0.4px;
@@ -6959,7 +6800,7 @@ body.pj-booting .taskbar {
 }
 .pj-lip-meta {
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   color: #aeb6bf;
   font-weight: 400;
 }
@@ -7188,7 +7029,7 @@ body.pj-booting .taskbar {
 }
 .pj-lb-tech {
   font-family: var(--f-mono);
-  font-size: 8px;
+  font-size: 11px;
   line-height: 1.5;
   color: var(--field-text);
   opacity: 0.82;
@@ -7200,7 +7041,7 @@ body.pj-booting .taskbar {
 }
 .pj-lb-badge {
   font-family: var(--f-mono);
-  font-size: 7px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.3px;
   color: var(--pj-sig-ink);
@@ -7219,7 +7060,7 @@ body.pj-booting .taskbar {
   align-items: center;
   gap: 5px;
   font-family: var(--f-mono);
-  font-size: 7.5px;
+  font-size: 11px;
   color: var(--field-text);
   opacity: 0.62;
   flex: 0 0 auto;
@@ -7229,7 +7070,7 @@ body.pj-booting .taskbar {
   color: var(--pj-sig-ink);
   padding: 1px 3px;
   font-weight: 700;
-  font-size: 7px;
+  font-size: 11px;
   opacity: 1;
 }
 .pj-lb-date {
@@ -7339,7 +7180,7 @@ body.pj-booting .taskbar {
 .pj-readout {
   flex: 1;
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--win-text-dim);
   letter-spacing: 0.5px;
   white-space: nowrap;
@@ -7424,7 +7265,7 @@ body.pj-booting .taskbar {
   display: grid;
   place-items: center;
   font-family: var(--f-mono);
-  font-size: 7px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--pj-sig);
   line-height: 1;
@@ -7472,7 +7313,7 @@ body.pj-booting .taskbar {
 }
 .pj-skip {
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.6px;
   cursor: pointer;
   padding: 2px 8px;
@@ -7562,7 +7403,7 @@ body.pj-booting .taskbar {
 }
 .pj-term-c {
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--win-text-dim);
   padding: 3px 9px;
   border: 1px solid;
@@ -7586,9 +7427,19 @@ body.pj-booting .taskbar {
   margin: 0 auto;
 }
 
-@media (min-width: 641px) {
+/* Must mirror OSContext's isMobile exactly: vp.w < 900 || (coarse && vp.w < 1024).
+   A flat 900px hide would reopen the dead zone for touch devices 900-1023px,
+   where isMobile is still true (FixedComponents renders no ProjectsWindow)
+   but this fallback would already be hidden — every visitor in that range
+   would get neither window. */
+@media (min-width: 900px) {
   .pj-stage {
     display: none;
+  }
+}
+@media (min-width: 900px) and (max-width: 1023px) and (pointer: coarse) {
+  .pj-stage {
+    display: block;
   }
 }
 
@@ -7695,7 +7546,7 @@ body.pj-booting .taskbar {
 }
 .pj-menubar .pj-rate {
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--win-text-dim);
   display: flex;
   align-items: center;
@@ -7804,7 +7655,7 @@ body.pj-booting .taskbar {
   background: var(--desktop-bg-2);
   border: 1px solid var(--chrome-dk);
   font-family: var(--f-sys);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   color: #c9cfd6;
   letter-spacing: 0.4px;
@@ -7814,7 +7665,7 @@ body.pj-booting .taskbar {
 }
 .pj-ph-meta {
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   color: #aeb6bf;
   font-weight: 400;
 }
@@ -7828,6 +7679,19 @@ body.pj-booting .taskbar {
   padding: 10px 12px 12px;
 }
 
+/* mobile tab switch — was an instant swap; same recipe as .pw-tab-body /
+   .sk-tab-panel (state-change tier, no stagger) */
+.pj-tab-panel {
+  animation: pjTabIn 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes pjTabIn {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pj-tab-panel { animation: none; }
+}
+
 /* group header — mirrors .sk-grp / .ab-grp */
 .pj-grp {
   display: flex;
@@ -7839,20 +7703,20 @@ body.pj-booting .taskbar {
   letter-spacing: 0.3px;
   margin-bottom: 8px;
   font-family: var(--f-sys);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   color: #e7ebef;
 }
 .pj-tw {
   color: var(--pj-sig);
-  font-size: 9px;
+  font-size: 11px;
   width: 9px;
 }
 .pj-cnt {
   margin-left: auto;
   color: #aeb6bf;
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 400;
 }
 
@@ -7862,6 +7726,7 @@ body.pj-booting .taskbar {
   line-height: 1.7;
   color: var(--field-text);
   margin-bottom: 12px;
+  user-select: text;
 }
 .pj-prose p {
   margin: 0 0 9px;
@@ -7889,7 +7754,7 @@ body.pj-booting .taskbar {
 }
 .pj-k {
   font-family: var(--f-mono);
-  font-size: 9.5px;
+  font-size: 11px;
   color: var(--win-text-dim);
   letter-spacing: 0.4px;
   flex: 0 0 116px;
@@ -7917,10 +7782,11 @@ body.pj-booting .taskbar {
   display: flex;
   align-items: baseline;
   gap: 8px;
+  user-select: text;
 }
 .pj-mk {
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   color: var(--win-text-dim);
   flex: 1;
 }
@@ -7939,7 +7805,7 @@ body.pj-booting .taskbar {
 }
 .pj-chip {
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   padding: 3px 7px;
   background: var(--pj-sig-soft);
   border: 1px solid var(--pj-sig);
@@ -7954,7 +7820,7 @@ body.pj-booting .taskbar {
 }
 .pj-sb {
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--win-text-dim);
   padding: 4px 10px;
   border: 1px solid;
@@ -8099,7 +7965,7 @@ body.pj-booting .taskbar {
   }
   .pj-k {
     flex: 0 0 100%;
-    font-size: 9px;
+    font-size: 11px;
   }
   .pj-titletxt {
     font-size: 11px;
@@ -8153,7 +8019,7 @@ body.pj-booting .taskbar {
     padding: 8px 10px 10px;
   }
   .pj-term-bd {
-    font-size: 10px;
+    font-size: 11px;
     min-height: 150px;
     padding: 7px 8px 9px;
   }
@@ -8434,7 +8300,7 @@ body.pj-booting .taskbar {
 }
 .jn-menubar .jn-run {
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--win-text-dim);
   display: flex;
   align-items: center;
@@ -8472,14 +8338,14 @@ body.pj-booting .taskbar {
   background: var(--desktop-bg-2);
   border-bottom: 1px solid var(--chrome-dk);
   font-family: var(--f-sys);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   color: #c9cfd6;
   letter-spacing: 0.4px;
 }
 .jn-tw {
   color: var(--jn-sig);
-  font-size: 9px;
+  font-size: 11px;
   width: 9px;
 }
 .jn-hd-sp {
@@ -8487,7 +8353,7 @@ body.pj-booting .taskbar {
 }
 .jn-hd-meta {
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   color: #aeb6bf;
   font-weight: 400;
 }
@@ -8543,7 +8409,7 @@ body.pj-booting .taskbar {
   padding: 5px 9px;
   background: linear-gradient(to right, var(--t-start), var(--t-end));
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   color: #fff;
   letter-spacing: 1.2px;
@@ -8576,7 +8442,7 @@ body.pj-booting .taskbar {
 .jn-c-date {
   margin-left: auto;
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   color: var(--win-text-dim);
   letter-spacing: 0.4px;
   white-space: nowrap;
@@ -8608,7 +8474,7 @@ body.pj-booting .taskbar {
 }
 .jn-c-k {
   font-family: var(--f-mono);
-  font-size: 8.5px;
+  font-size: 11px;
   color: var(--win-text-dim);
   flex: 0 0 74px;
   text-transform: uppercase;
@@ -8617,6 +8483,7 @@ body.pj-booting .taskbar {
 .jn-c-v {
   flex: 1;
   line-height: 1.45;
+  user-select: text;
 }
 .jn-c-v b {
   color: var(--jn-sig);
@@ -8630,7 +8497,7 @@ body.pj-booting .taskbar {
   gap: 8px;
   border-top: 1px solid rgba(128, 128, 128, 0.22);
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   color: var(--win-text-dim);
 }
 .jn-c-loss {
@@ -8664,6 +8531,26 @@ body.pj-booting .taskbar {
   100% {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* The card's loss number pulses in the shared signature glow at the exact
+   instant its epoch goes live — the same moment the canvas marker bursts —
+   so the "provably synced" claim is a felt beat, not just a mechanical fact. */
+.jn-c-loss-num {
+  display: inline-block;
+  animation: jnLossPulse 0.6s var(--ease-window, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
+@keyframes jnLossPulse {
+  0% {
+    color: var(--jn-sig);
+    text-shadow: 0 0 14px var(--jn-sig-glow);
+    transform: scale(1.3);
+  }
+  100% {
+    color: var(--jn-sig);
+    text-shadow: none;
+    transform: scale(1);
   }
 }
 
@@ -8748,7 +8635,7 @@ body.pj-booting .taskbar {
 }
 .jn-ro-k {
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   color: #aeb6bf;
   flex: 1;
 }
@@ -8759,7 +8646,7 @@ body.pj-booting .taskbar {
   color: var(--jn-sig);
 }
 .jn-ro-st {
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.6px;
 }
 .jn-ro-bar {
@@ -8791,7 +8678,7 @@ body.pj-booting .taskbar {
 }
 .jn-sb {
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--win-text-dim);
   padding: 4px 10px;
   border: 1px solid;
@@ -8905,8 +8792,8 @@ body.pj-booting .taskbar {
     font-size: 21px;
   }
   .jn-c-k {
-    flex: 0 0 60px;
-    font-size: 8px;
+    flex: 0 0 68px;
+    font-size: 11px;
   }
   .jn-titletxt {
     font-size: 11px;
@@ -9191,7 +9078,7 @@ body.pj-booting .taskbar {
   font-size: 11px;
 }
 .pw-si-date {
-  font-size: 9px;
+  font-size: 11px;
   opacity: 0.7;
   font-family: var(--f-mono);
 }
@@ -9310,6 +9197,14 @@ body.pj-booting .taskbar {
 /* tab body */
 .pw-tab-body {
   padding: 14px 16px 18px;
+  animation: pwTabIn 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes pwTabIn {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pw-tab-body { animation: none; }
 }
 
 /* ── summary tab ── */
@@ -9339,7 +9234,7 @@ body.pj-booting .taskbar {
 }
 .pw-proj-date {
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--win-text-dim);
   margin-top: 3px;
 }
@@ -9357,6 +9252,35 @@ body.pj-booting .taskbar {
   white-space: nowrap;
   flex-shrink: 0;
   padding-top: 2px;
+}
+
+/* The one thing that made this project hard, surfaced at first glance
+   instead of buried three clicks deep in the Architecture tab. Same
+   signature-glow emphasis already used for "selected/active" elsewhere
+   (.dp-theme-sel, .sk-st-active .sk-sd) — not a new device. */
+.pw-signature {
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: var(--chrome);
+  border: 1px solid var(--pj-sig);
+  box-shadow: 0 0 10px var(--pj-sig-soft);
+  border-radius: 2px;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--win-text);
+}
+.pw-signature-label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--pj-sig);
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+.pw-signature b {
+  color: var(--pj-sig);
 }
 
 .pw-fields {
@@ -9402,7 +9326,7 @@ body.pj-booting .taskbar {
 }
 .pw-mk {
   font-family: var(--f-sys);
-  font-size: 9.5px;
+  font-size: 11px;
   color: var(--win-text-dim);
 }
 
@@ -9424,7 +9348,9 @@ body.pj-booting .taskbar {
   margin-bottom: 14px;
   padding: 8px 10px;
   background: var(--chrome);
-  border-left: 3px solid var(--pj-sig);
+  border: 1px solid var(--chrome-dk);
+  box-shadow: inset 1px 1px 0 var(--chrome-lt);
+  border-radius: 2px;
 }
 /* grouped chips */
 .pw-chip-group {
@@ -9432,7 +9358,7 @@ body.pj-booting .taskbar {
 }
 .pw-chip-group-label {
   font-family: var(--f-mono);
-  font-size: 9.5px;
+  font-size: 11px;
   letter-spacing: 0.5px;
   color: var(--win-text-dim);
   text-transform: uppercase;
@@ -9445,7 +9371,7 @@ body.pj-booting .taskbar {
 }
 .pw-chip {
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 11px;
   padding: 4px 10px;
   background: var(--chrome);
   border: 2px solid;
@@ -9472,7 +9398,9 @@ body.pj-booting .taskbar {
   margin-bottom: 12px;
   padding: 8px 10px;
   background: var(--chrome);
-  border-left: 3px solid var(--pj-sig);
+  border: 1px solid var(--chrome-dk);
+  box-shadow: inset 1px 1px 0 var(--chrome-lt);
+  border-radius: 2px;
 }
 .pw-arch-rows {
   display: flex;
@@ -9495,7 +9423,7 @@ body.pj-booting .taskbar {
 }
 .pw-arch-k {
   font-family: var(--f-mono);
-  font-size: 9.5px;
+  font-size: 11px;
   letter-spacing: 0.4px;
   color: var(--pj-sig);
   flex: 0 0 108px;
@@ -9561,7 +9489,7 @@ body.pj-booting .taskbar {
 }
 .pw-path {
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   color: var(--win-text-dim);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -9580,7 +9508,7 @@ body.pj-booting .taskbar {
 }
 .pw-sb {
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--win-text-dim);
   padding: 3px 10px;
   white-space: nowrap;
@@ -9698,7 +9626,7 @@ body.pj-booting .taskbar {
   }
   .pw-btn {
     padding: 3px 10px;
-    font-size: 10px;
+    font-size: 11px;
   }
 }
 @media (max-width: 380px) {
@@ -9707,7 +9635,7 @@ body.pj-booting .taskbar {
   }
   .pw-tab {
     padding: 3px 8px;
-    font-size: 10px;
+    font-size: 11px;
   }
 }
 
@@ -9748,6 +9676,12 @@ body.pj-booting .taskbar {
 }
 .pj-menu-launch .px-ico { width: 12px; height: 12px; }
 .pj-menu-launch:hover { text-decoration: underline; }
+.pj-menu-launch-disabled {
+  color: var(--win-text-dim);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.pj-menu-launch-disabled:hover { text-decoration: none; }
 
 /* ProjectsWindow pixel-icon slots (replaces emoji glyphs) */
 .pw-title-ico .px-ico { width: 14px; height: 14px; display: block; }
@@ -9826,7 +9760,7 @@ body.pj-booting .taskbar {
 [data-theme="dark"] .tray-net { color: var(--win-text, #e8e6e1); }
 .tray-net .px-ico { width: 13px; height: 13px; }
 .tray-net-flash { color: var(--accent, #e89020); }
-.tray-online { font-size: 10px; letter-spacing: 0.02em; }
+.tray-online { font-size: 11px; letter-spacing: 0.02em; }
 .tray-clock { min-width: 54px; text-align: right; }
 [data-theme="dark"] .tray-online,
 [data-theme="dark"] .tray-clock { color: var(--win-text, #e8e6e1); }
@@ -9982,7 +9916,7 @@ body.pj-booting .taskbar {
 .recycle-row:last-of-type { border-bottom: none; }
 .recycle-ico { width: 14px; height: 14px; flex-shrink: 0; opacity: 0.8; }
 .recycle-name { font-family: var(--f-mono, monospace); font-size: 11px; }
-.recycle-meta { margin-left: auto; opacity: 0.65; font-size: 10px; white-space: nowrap; }
+.recycle-meta { margin-left: auto; opacity: 0.65; font-size: 11px; white-space: nowrap; }
 .recycle-foot { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--chrome-dk, #808080); opacity: 0.75; font-size: 10.5px; }
 
 /* L5 touch targets: the mobile mail window's ✕ gets a 44px hit area without
@@ -10028,7 +9962,7 @@ body.pj-booting .taskbar {
 .folder-img.os-ico { width: 48px; height: 48px; color: unset; }
 
 /* About dialog credits (license attribution for the icon sets) */
-.about-credits { font-size: 9.5px; line-height: 1.5; opacity: 0.62; }
+.about-credits { font-size: 11px; line-height: 1.5; opacity: 0.62; }
 
 /* ═══ TYPE SYSTEM v2 — role tuning ═══
    Plex Sans is slightly wider than the retired Chivo at 11px chrome sizes;
@@ -10112,12 +10046,12 @@ body { font-feature-settings: "ss02" 0; }
   background: radial-gradient(60% 34% at 30% 6%, rgba(255,255,255,0.10), transparent 70%);
 }
 .pj-mon-osd {
-  position: absolute; top: 7px; left: 9px; font: 500 8.5px var(--f-mono);
+  position: absolute; top: 7px; left: 9px; font: 500 11px var(--f-mono);
   letter-spacing: 0.08em; color: rgba(57,255,20,0.85);
   text-shadow: 0 0 6px rgba(57,255,20,0.6);
 }
 .pj-mon-onair {
-  position: absolute; top: 7px; right: 9px; font: 700 8.5px var(--f-mono);
+  position: absolute; top: 7px; right: 9px; font: 700 11px var(--f-mono);
   letter-spacing: 0.08em; color: #ff5b45; text-shadow: 0 0 7px rgba(255,91,69,0.7);
   opacity: 0; transition: opacity 0.2s ease;
   animation: pjOnAir calc(1.1s * var(--spd, 1)) steps(2, jump-none) infinite;
@@ -10172,7 +10106,7 @@ body { font-feature-settings: "ss02" 0; }
      whole scene, and prefers-reduced-motion freezes it) ── */
 .pj-feed { position: absolute; inset: 0; display: block; }
 .pj-feed-tag {
-  position: absolute; left: 9px; bottom: 8px; font: 500 8px var(--f-mono);
+  position: absolute; left: 9px; bottom: 8px; font: 500 11px var(--f-mono);
   letter-spacing: 0.07em; color: rgba(232,144,32,0.9);
   text-shadow: 0 0 6px rgba(232,144,32,0.5);
 }
@@ -10248,7 +10182,7 @@ body { font-feature-settings: "ss02" 0; }
   animation: pjLock calc(2.2s * var(--spd, 1)) steps(1) infinite;
 }
 .pj-fv-box i {
-  position: absolute; top: -12px; left: -1px; font: 500 7px var(--f-mono);
+  position: absolute; top: -15px; left: -1px; font: 500 11px var(--f-mono);
   font-style: normal; color: var(--phosphor, #39ff14); white-space: nowrap;
 }
 .pj-fv-box1 { left: 22%; bottom: 16%; width: 20%; height: 13%; }
@@ -10408,7 +10342,7 @@ body { font-feature-settings: "ss02" 0; }
 }
 .pj-app-btns { display: flex; gap: 2px; }
 .pj-app-btns i {
-  width: 15px; height: 14px; font: 700 9px var(--f-sys); font-style: normal;
+  width: 17px; height: 16px; font: 700 10px var(--f-sys); font-style: normal;
   display: inline-flex; align-items: center; justify-content: center;
   background: var(--chrome, #c0c0c0); color: #000;
   border: 1px solid; border-top-color: var(--chrome-lt, #dfdfdf);
@@ -10455,10 +10389,10 @@ body { font-feature-settings: "ss02" 0; }
   padding: 5px 7px 2px;
 }
 .pj-app-sb-sp { flex: 1; }
-.pj-app-date { font: 500 7.5px var(--f-mono); opacity: 0.62; color: var(--field-text, #1a1d23); }
+.pj-app-date { font: 500 11px var(--f-mono); opacity: 0.62; color: var(--field-text, #1a1d23); }
 .pj-app-tech {
   display: flex; flex-wrap: wrap; gap: 2px 10px; padding: 0 7px 5px;
-  font: 400 8px var(--f-mono); color: var(--field-text, #1a1d23); opacity: 0.8;
+  font: 400 11px var(--f-mono); color: var(--field-text, #1a1d23); opacity: 0.8;
 }
 .pj-app .pj-lb-name { font-size: 12.5px; }
 
@@ -10501,7 +10435,7 @@ body { font-feature-settings: "ss02" 0; }
 .pj-app-tech {
   display: flex; flex-wrap: wrap; align-items: center;
   gap: 0 6px; padding: 0;
-  font: 400 9.5px var(--f-mono);
+  font: 400 11px var(--f-mono);
   color: var(--field-text, #1a1d23); opacity: 0.78;
   line-height: 1.6;
 }
@@ -10519,7 +10453,7 @@ body { font-feature-settings: "ss02" 0; }
 [data-theme="dark"] .pj-app-meta { border-top-color: rgba(255, 255, 255, 0.08); }
 .pj-app-meta .pj-lb-badge { margin: 0; align-self: center; }
 .pj-app-date {
-  font: 500 8.5px var(--f-mono); letter-spacing: 0.04em;
+  font: 500 11px var(--f-mono); letter-spacing: 0.04em;
   opacity: 0.66; white-space: nowrap;
 }
 
@@ -10533,7 +10467,7 @@ body { font-feature-settings: "ss02" 0; }
   }
   .pj-app-menu { display: flex; }          /* room exists again at full width */
   .pj-app .pj-lb-name { font-size: 16px; }
-  .pj-app-tech { font-size: 10px; }
+  .pj-app-tech { font-size: 11px; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -10758,7 +10692,7 @@ body { font-feature-settings: "ss02" 0; }
 .at-menu-spacer { flex: 1; }
 .at-model-tag {
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   color: var(--at-sig);
   padding: 1px 7px;
   border: 1px solid var(--at-sig);
@@ -10792,20 +10726,35 @@ body { font-feature-settings: "ss02" 0; }
 }
 
 /* individual messages */
-.at-msg { display: flex; flex-direction: column; gap: 3px; }
+.at-msg {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  animation: atMsgIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes atMsgIn {
+  0% { opacity: 0; transform: translateY(5px); }
+  100% { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .at-msg { animation: none; }
+}
 .at-msg-meta {
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.5px;
   font-family: var(--f-mono);
 }
 .at-msg-user .at-msg-meta { color: var(--at-sig); }
 .at-msg-ai   .at-msg-meta { color: var(--phosphor); }
 .at-msg-sys  .at-msg-meta { color: var(--win-text-dim); }
-.at-msg-text { white-space: pre-wrap; word-break: break-word; color: var(--win-text); }
+.at-msg-text { white-space: pre-wrap; word-break: break-word; color: var(--win-text); user-select: text; }
 .at-msg-sys  .at-msg-text { color: var(--win-text-dim); font-style: italic; font-size: 11px; }
 .at-msg-pfx     { color: var(--at-sig);   font-weight: 700; }
 .at-msg-pfx-ai  { color: var(--phosphor); font-weight: 700; }
-.at-thinking-cursor { color: var(--phosphor); animation: blink .7s step-end infinite; }
+.at-thinking-cursor { color: var(--phosphor); animation: atBlink .7s step-end infinite; }
+@keyframes atBlink {
+  50% { opacity: 0; }
+}
 
 /* suggestions */
 .at-sugs {
@@ -10820,7 +10769,7 @@ body { font-feature-settings: "ss02" 0; }
 [data-theme="dark"] .at-sugs { background: var(--win-dk); }
 .at-sug {
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   padding: 2px 9px;
   background: var(--field-bg);
   border: 1px solid var(--chrome-dk);
@@ -10864,7 +10813,7 @@ body { font-feature-settings: "ss02" 0; }
 .at-input:disabled { opacity: 0.5; }
 .at-clear-btn {
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   padding: 4px 8px;
   margin: 2px 4px;
   background: var(--win-face);
@@ -10877,7 +10826,7 @@ body { font-feature-settings: "ss02" 0; }
 .at-clear-btn:hover { border-color: var(--at-sig); color: var(--at-sig); }
 .at-send {
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 11px;
   padding: 4px 14px;
   margin: 2px 4px;
   background: var(--t-start);
@@ -10906,7 +10855,7 @@ body { font-feature-settings: "ss02" 0; }
   border-top: 2px inset var(--chrome-dk);
   flex-shrink: 0;
   font-family: var(--f-mono);
-  font-size: 9.5px;
+  font-size: 11px;
 }
 .at-sb {
   padding: 3px 10px;
@@ -11137,7 +11086,7 @@ body.pj-booting .at-section { filter: blur(3.5px) saturate(.72) brightness(.82);
   gap: 6px;
   padding-right: 6px;
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   color: var(--win-text-dim);
 }
 .ct-menu-dot {
@@ -11165,7 +11114,7 @@ body.pj-booting .at-section { filter: blur(3.5px) saturate(.72) brightness(.82);
 }
 .ct-addr-label {
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--win-text-dim);
@@ -11192,6 +11141,21 @@ body.pj-booting .at-section { filter: blur(3.5px) saturate(.72) brightness(.82);
   letter-spacing: 0.02em;
   user-select: all;
 }
+/* Terminal block cursor for the type-in reveal — same recipe as Projects'
+   boot terminal caret (.pj-caret), Contact's own signature color/glow. */
+.ct-caret {
+  display: inline-block;
+  width: 8px;
+  height: 0.85em;
+  background: var(--ct-sig);
+  box-shadow: 0 0 7px var(--ct-sig-glow);
+  vertical-align: -0.12em;
+  margin-left: 1px;
+  animation: ctCaretBlink 0.5s step-end infinite;
+}
+@keyframes ctCaretBlink {
+  50% { opacity: 0; }
+}
 .ct-copy-btn {
   display: inline-flex;
   align-items: center;
@@ -11204,7 +11168,7 @@ body.pj-booting .at-section { filter: blur(3.5px) saturate(.72) brightness(.82);
   border-right-color: var(--chrome-dk);
   border-bottom-color: var(--chrome-dk);
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--win-text);
   cursor: pointer;
   flex-shrink: 0;
@@ -11220,7 +11184,7 @@ body.pj-booting .at-section { filter: blur(3.5px) saturate(.72) brightness(.82);
   gap: 8px;
   margin-top: 8px;
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   color: var(--win-text-dim);
   flex-wrap: wrap;
 }
@@ -11254,7 +11218,7 @@ body.pj-booting .at-section { filter: blur(3.5px) saturate(.72) brightness(.82);
 }
 .ct-cta-hint {
   font-family: var(--f-mono);
-  font-size: 9.5px;
+  font-size: 11px;
   color: var(--win-text-dim);
   letter-spacing: 0.06em;
 }
@@ -11297,7 +11261,7 @@ body.pj-booting .at-section { filter: blur(3.5px) saturate(.72) brightness(.82);
   color: var(--win-text-dim);
   text-decoration: none;
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   border-right: 1px solid color-mix(in srgb, var(--chrome-dk) 40%, transparent);
@@ -11318,7 +11282,7 @@ body.pj-booting .at-section { filter: blur(3.5px) saturate(.72) brightness(.82);
   background: var(--chrome);
   border-top: 2px inset var(--chrome-dk);
   font-family: var(--f-mono);
-  font-size: 9.5px;
+  font-size: 11px;
   flex-shrink: 0;
 }
 .ct-sb {
@@ -11539,7 +11503,7 @@ body.pj-booting .ct-section { filter: blur(3.5px) saturate(.72) brightness(.82);
    bordered chip — the boxed tag was the loudest mismatch in the screenshot */
 .at-model-tag, .ct-menu-status {
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--win-text-dim);
   display: flex;
   align-items: center;
@@ -11559,11 +11523,11 @@ body.pj-booting .ct-section { filter: blur(3.5px) saturate(.72) brightness(.82);
   border-top: 1px solid var(--chrome-lt);
   margin-top: 2px;
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 11px;
 }
 .at-sb, .ct-sb {
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--win-text-dim);
   padding: 4px 10px;
   border: 1px solid;
@@ -11579,6 +11543,7 @@ body.pj-booting .ct-section { filter: blur(3.5px) saturate(.72) brightness(.82);
 .at-sb b, .ct-sb b { color: var(--at-sig, var(--ct-sig)); font-weight: 700; }
 .at-sb-grow, .ct-sb-grow { flex: 1; }
 .at-sb-online, .ct-sb-online { color: var(--phosphor); font-weight: 700; }
+.at-sb-error { color: var(--accent, #e89020); font-weight: 700; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    CONTACT — MOBILE ALIGNMENT
@@ -11658,7 +11623,7 @@ body.pj-booting .ct-section { filter: blur(3.5px) saturate(.72) brightness(.82);
 .syswin-mb-sp:hover, .syswin-mb-tag:hover { background: none !important; }
 .syswin-mb-tag {
   display: flex; align-items: center; gap: 6px;
-  font-family: var(--f-mono); font-size: 10px; color: var(--win-text-dim);
+  font-family: var(--f-mono); font-size: 11px; color: var(--win-text-dim);
 }
 .syswin-dot {
   width: 6px; height: 6px; border-radius: 50%;
@@ -11680,12 +11645,12 @@ body.pj-booting .ct-section { filter: blur(3.5px) saturate(.72) brightness(.82);
 .syswin-ph {
   display: flex; align-items: center; gap: 8px; padding: 5px 8px;
   background: var(--desktop-bg-2); border-bottom: 1px solid var(--chrome-dk);
-  font-family: var(--f-sys); font-size: 10px; font-weight: 700;
+  font-family: var(--f-sys); font-size: 11px; font-weight: 700;
   color: #c9cfd6; letter-spacing: 0.4px;
 }
 [data-theme="light"] .syswin-panel { background: #cccccf; }
 [data-theme="light"] .syswin-ph { background: #c0c0c0; color: #000080; }
-.syswin-tw { color: var(--accent); font-size: 9px; width: 9px; }
+.syswin-tw { color: var(--accent); font-size: 11px; width: 9px; }
 
 .syswin-rows { padding: 4px 0; }
 .syswin-row {
@@ -11695,7 +11660,7 @@ body.pj-booting .ct-section { filter: blur(3.5px) saturate(.72) brightness(.82);
 }
 .syswin-row:last-child { border-bottom: none; }
 .syswin-row > span {
-  flex: 0 0 108px; font-family: var(--f-mono); font-size: 9.5px;
+  flex: 0 0 108px; font-family: var(--f-mono); font-size: 11px;
   letter-spacing: 0.06em; text-transform: uppercase; color: var(--win-text-dim);
 }
 .syswin-row > b { color: var(--field-text); font-weight: 600; }
@@ -11708,12 +11673,12 @@ body.pj-booting .ct-section { filter: blur(3.5px) saturate(.72) brightness(.82);
   line-height: 1; color: var(--field-text); letter-spacing: 0.02em;
 }
 .syswin-hero-sub {
-  margin-top: 4px; font-family: var(--f-mono); font-size: 10px;
+  margin-top: 4px; font-family: var(--f-mono); font-size: 11px;
   color: var(--win-text-dim);
 }
 .syswin-credits { padding: 9px 10px; }
 .syswin-credits p {
-  margin: 0 0 3px; font-family: var(--f-mono); font-size: 9.5px;
+  margin: 0 0 3px; font-family: var(--f-mono); font-size: 11px;
   line-height: 1.55; color: var(--win-text-dim);
 }
 
@@ -11722,7 +11687,7 @@ body.pj-booting .ct-section { filter: blur(3.5px) saturate(.72) brightness(.82);
   margin-top: 2px; flex-shrink: 0;
 }
 .syswin-sb {
-  font-family: var(--f-mono); font-size: 10px; color: var(--win-text-dim);
+  font-family: var(--f-mono); font-size: 11px; color: var(--win-text-dim);
   padding: 4px 10px; border: 1px solid;
   border-top-color: var(--chrome-dk); border-left-color: var(--chrome-dk);
   border-right-color: var(--chrome-lt); border-bottom-color: var(--chrome-lt);
@@ -11752,7 +11717,7 @@ body.pj-booting .ct-section { filter: blur(3.5px) saturate(.72) brightness(.82);
 }
 .bin-tb-sp { flex: 1; }
 .bin-tb-hint {
-  font-family: var(--f-mono); font-size: 9px; color: var(--win-text-dim);
+  font-family: var(--f-mono); font-size: 11px; color: var(--win-text-dim);
   letter-spacing: 0.04em;
 }
 
@@ -11774,13 +11739,13 @@ body.pj-booting .ct-section { filter: blur(3.5px) saturate(.72) brightness(.82);
 .bin-cols {
   background: var(--desktop-bg-2); color: #c9cfd6;
   border-bottom: 1px solid var(--chrome-dk);
-  font: 700 9.5px var(--f-sys); letter-spacing: 0.4px; flex-shrink: 0;
+  font: 700 11px var(--f-sys); letter-spacing: 0.4px; flex-shrink: 0;
 }
 [data-theme="light"] .bin-cols { background: #c0c0c0; color: #000080; }
 .bin-rows { flex: 1; min-height: 0; overflow-y: auto; }
 .bin-row {
   width: 100%; border: 0; background: none; cursor: pointer; text-align: left;
-  font-family: var(--f-mono); font-size: 10px; color: var(--field-text);
+  font-family: var(--f-mono); font-size: 11px; color: var(--field-text);
   border-bottom: 1px solid rgba(128,128,128,0.14);
 }
 .bin-row:hover { background: rgba(0,0,128,0.07); }
@@ -11792,7 +11757,7 @@ body.pj-booting .ct-section { filter: blur(3.5px) saturate(.72) brightness(.82);
 .bin-nm-ico { width: 14px; height: 14px; flex-shrink: 0; opacity: 0.85; }
 .bin-nm-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bin-c-type, .bin-c-size, .bin-c-date {
-  font-size: 9px; opacity: 0.8; white-space: nowrap;
+  font-size: 11px; opacity: 0.8; white-space: nowrap;
   overflow: hidden; text-overflow: ellipsis;
 }
 .bin-c-size, .bin-c-date { text-align: right; }
@@ -11804,16 +11769,33 @@ body.pj-booting .ct-section { filter: blur(3.5px) saturate(.72) brightness(.82);
 }
 .bin-d-meta {
   display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px;
-  font-family: var(--f-mono); font-size: 9px; color: var(--win-text-dim);
+  font-family: var(--f-mono); font-size: 11px; color: var(--win-text-dim);
 }
 .bin-d-dot { opacity: 0.5; }
 .bin-d-label {
-  margin: 14px 0 6px; font: 700 9px var(--f-mono); letter-spacing: 0.1em;
+  margin: 14px 0 6px; font: 700 11px var(--f-mono); letter-spacing: 0.1em;
   text-transform: uppercase; color: var(--accent);
 }
+/* This "why it was cut" text is the strongest craft-proof on the whole site
+   (real, dated, first-person editorial reasoning) — give it the weight of
+   evidence being read out, not another body paragraph. Reveals fresh each
+   time a different item is selected (key-remounted in JSX). */
 .bin-d-why {
-  margin: 0; font-family: var(--f-body); font-size: 12.5px; line-height: 1.62;
+  position: relative;
+  margin: 0; padding-left: 20px;
+  font-family: var(--f-body); font-size: 13px; line-height: 1.65;
   color: var(--field-text);
+  animation: binWhyIn 0.42s var(--ease-window, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
+.bin-d-why::before {
+  content: "\201C";
+  position: absolute; left: 0; top: -0.1em;
+  font-family: var(--f-mono); font-size: 22px; font-weight: 700; line-height: 1;
+  color: var(--accent);
+}
+@keyframes binWhyIn {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: none; }
 }
 .bin-note { color: var(--accent) !important; }
 
@@ -12247,7 +12229,7 @@ body.cursor-hover .cursor-ring {
   position: absolute;
   bottom: 11px; left: 0; right: 0;
   text-align: center;
-  font: 700 7px "IBM Plex Mono", monospace;
+  font: 700 11px "IBM Plex Mono", monospace;
   letter-spacing: 0.14em;
   color: rgba(180, 185, 195, 0.55);
   transition: color 0.28s ease;
@@ -12290,7 +12272,7 @@ body.cursor-hover .cursor-ring {
     bottom: calc(var(--taskbar-h, 32px) + 14px);
     width: 48px; height: 48px;
   }
-  .s2t-hint { bottom: 9px; font-size: 6.5px; }
+  .s2t-hint { bottom: 9px; font-size: 11px; }
 }
 
 /* REDUCED MOTION — no breathing, no scale, still functional */

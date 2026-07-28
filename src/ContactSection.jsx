@@ -68,19 +68,41 @@ export default function ContactSection({ cvHref }) {
   }, []);
   const [copied, setCopied] = useState(false);
 
+  /* The one focal moment for this section: the address terminal-types
+     itself in once, first time Contact becomes visible — the same voice
+     as the boot log / AI.TERMINAL, not a generic fade-and-rise (the section
+     already gets that from .ct-in below too; this is the distinct beat on
+     top of it, matching "you've reached the end, here's the address"). */
+  const [typedLen, setTypedLen] = useState(os.reducedMotion ? EMAIL.length : 0);
+  const typedOnce = useRef(false);
+
   /* reveal on scroll */
   useEffect(() => {
     const el = rootRef.current; if (!el) return;
     const io = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) el.classList.add('ct-in'); },
+      ([e]) => {
+        if (!e.isIntersecting) return;
+        el.classList.add('ct-in');
+        if (typedOnce.current || os.reducedMotion) return;
+        typedOnce.current = true;
+        let i = 0;
+        const id = setInterval(() => {
+          i += 1;
+          setTypedLen(i);
+          if (i >= EMAIL.length) clearInterval(id);
+        }, 38);
+      },
       { threshold: 0.14 }
     );
     io.observe(el);
     return () => io.disconnect();
-  }, []);
+  }, [os.reducedMotion]);
 
   const copyEmail = useCallback(async () => {
     playClick();
+    // Finish the type-in instantly — the manual-selection fallback below
+    // reads the live DOM text, which would be truncated mid-animation.
+    setTypedLen(EMAIL.length);
     const ok = await copyText(EMAIL);
     if (ok) {
       setCopied(true);                      // only claim success truthfully
@@ -98,8 +120,9 @@ export default function ContactSection({ cvHref }) {
 
   const openMail = () => {
     playClick();
-    // 'contact' now travels to THIS section; the compose window has its own
-    // action so this button can't scroll to itself.
+    // Same dial-up handshake gate as the 'contact' action (desktop icon /
+    // Start menu) — both just open the compose window, see
+    // runDialupHandshake in OSContext.jsx.
     os.handleAction('contact_mail');
   };
 
@@ -124,9 +147,9 @@ export default function ContactSection({ cvHref }) {
             <span className="ct-titletxt">SHREY/OS Mail — Outbox</span>
             <span className="ct-live-dot" aria-hidden="true" />
             <div className="ct-winbtns">
-              <button className="win-btn" aria-hidden="true" tabIndex={-1} onClick={playClick}>_</button>
-              <button className="win-btn" aria-hidden="true" tabIndex={-1} onClick={playClick}>□</button>
-              <button className="win-btn win-close" aria-hidden="true" tabIndex={-1} onClick={playClick}>✕</button>
+              <button className="win-btn" aria-hidden="true" tabIndex={-1}>_</button>
+              <button className="win-btn" aria-hidden="true" tabIndex={-1}>□</button>
+              <button className="win-btn win-close" aria-hidden="true" tabIndex={-1}>✕</button>
             </div>
           </div>
 
@@ -151,7 +174,10 @@ export default function ContactSection({ cvHref }) {
               <div className="ct-addr-label">From · Address</div>
               <div className="ct-addr-row">
                 <span className="ct-addr-pfx">C:\MAIL&gt;&nbsp;</span>
-                <span className="ct-addr-email" aria-label={`Email: ${EMAIL}`}>{EMAIL}</span>
+                <span className="ct-addr-email" aria-label={`Email: ${EMAIL}`}>
+                  {EMAIL.slice(0, typedLen)}
+                  {typedLen < EMAIL.length && <span className="ct-caret" aria-hidden="true" />}
+                </span>
                 <button className="ct-copy-btn" onClick={copyEmail}
                   aria-label={copied ? 'Copied!' : 'Copy email address'}>
                   {copied

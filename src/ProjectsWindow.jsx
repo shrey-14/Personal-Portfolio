@@ -18,19 +18,9 @@ import { PxExternalLink, PxGitBranch } from './PixelIcons.jsx';
 import {
   OsHardDisk, OsMaps, OsText, OsImageViewer, OsCertificate,
 } from './OsIcons.jsx';
+import { LINKS } from './projectLinks.js';
 
 /* ── All project data (CV-sourced) ─────────────────────────────────────── */
-export /* ── PROJECT LINKS ───────────────────────────────────────────────────────
-   ONE place to edit URLs (was 8 duplicated `url:/repo:` fields across two
-   files). Fill these in when the projects are deployed — Launch / View
-   Source buttons render as soon as any value is non-null. Audit §3.1. */
-const LINKS = {
-  airadar:  { url: null, repo: null },   // TODO(shrey): AI Radar live URL + GitHub
-  contract: { url: null, repo: null },   // TODO(shrey): Contract Tracker
-  road:     { url: null, repo: null },   // TODO(shrey): Road Damage Detection
-  kitchen:  { url: null, repo: null },   // TODO(shrey): AI Kitchen Optimisation
-};
-
 const PROJECTS_DATA = [
   {
     id: 'airadar',
@@ -208,6 +198,12 @@ function TabContent({ project, tab }) {
           ● {project.status}
         </span>
       </div>
+      {project.arch?.[0] && (
+        <div className="pw-signature">
+          <span className="pw-signature-label">{project.arch[0].k}</span>
+          {project.arch[0].v}
+        </div>
+      )}
       <div className="pw-fields">
         {project.fields.map(f => (
           <div className="pw-field-row" key={f.k}>
@@ -323,7 +319,7 @@ export default function ProjectsWindow() {
         <div className="pw-winbtns">
           <button className="win-btn" aria-label="Minimize"
             onClick={() => { playClick(); os.wAction('explorer','minimize'); }}>_</button>
-          <button className="win-btn" onClick={playClick}>□</button>
+          <button className="win-btn" aria-hidden="true" tabIndex={-1}>□</button>
           <button className="win-btn win-close" aria-label="Close"
             onClick={() => { playClick(); os.wAction('explorer','close'); window.dispatchEvent(new CustomEvent('shreyos-eject-disk')); }}>✕</button>
         </div>

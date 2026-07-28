@@ -394,23 +394,44 @@ function drawGate(ctx, W, H, S, gateT) {
   ctx.drawImage(S.freezeCanvas, dx, dy, dw, dh);
   ctx.globalAlpha = 1;
 
-  // 2) A soft central bloom swells then releases (the CRT "gate").
+  // 2) A soft central bloom swells then releases (the CRT "gate") — shaped
+  //    by the SAME W/H-normalised vx²+vy² oval falloff as every other boot
+  //    phase's vignette, and grained the same way, so it reads as "the same
+  //    tube dimming" rather than a flat grey circle sliding off screen.
   const bloom = Math.sin(p * Math.PI) * 0.9;
+  const rn2 = Math.pow(0.10 + e * 0.5, 2);   // normalised bloom radius, squared
+  const img = ctx.getImageData(0, 0, W, H);
+  const d = img.data;
   if (bloom > 0.01) {
-    const cx = W / 2, cy = H / 2;
-    const r = Math.max(2, W * (0.10 + e * 0.5));
-    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-    g.addColorStop(0, cssWhite(bloom));
-    g.addColorStop(0.5, `rgba(200,230,230,${bloom * 0.4})`);
-    g.addColorStop(1, "rgba(27,30,36,0)");
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
+    for (let py = 0; py < H; py++) {
+      const vy = (py / H) * 2 - 1;
+      for (let px = 0; px < W; px++) {
+        const vx = (px / W) * 2 - 1;
+        const f = clamp(1 - (vx * vx + vy * vy) / rn2, 0, 1);
+        const b = bloom * f * f;
+        if (b <= 0) continue;
+        const i = (py * W + px) * 4;
+        d[i]     = clamp(d[i]     + 255 * b, 0, 255);
+        d[i + 1] = clamp(d[i + 1] + 235 * b, 0, 255);
+        d[i + 2] = clamp(d[i + 2] + 235 * b, 0, 255);
+      }
+    }
+  }
+  applyGrainRaw(d, W, H, S.frame, 0.09);
+  ctx.putImageData(img, 0, 0);
+  for (let sy = 0; sy < H; sy += 2) {
+    ctx.fillStyle = "rgba(0,0,0,0.16)";
+    ctx.fillRect(0, sy, W, 1);
   }
 
-  // 3) Cross-dissolve to the SHREY/OS desktop teal (#008080).
+  // 3) Cross-dissolve to the SHREY/OS desktop graphite (#1b1e24). This
+  //    opaque wash also erases the grain/scanlines above by p=1, so the
+  //    frame handed off to the desktop still matches --desktop-bg exactly.
   const charcoalA = easeOut(clamp((p - 0.5) / 0.5, 0, 1));
   ctx.fillStyle = `rgba(27,30,36,${charcoalA})`;
   ctx.fillRect(0, 0, W, H);
+
+  drawGlass(ctx, W, H);
 
   if (p >= 1) S.animDone = true;
 }

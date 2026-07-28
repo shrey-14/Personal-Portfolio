@@ -35,21 +35,12 @@ const renderB = (html) => String(html).split(/<b>|<\/b>/g).map((part, i) =>
   i % 2 ? <b key={i}>{part}</b> : (part ? <span key={i}>{part}</span> : null));
 import { PxExternalLink, PxGitBranch } from './PixelIcons.jsx';
 import { OsHardDisk, OsMaps, OsText, OsImageViewer, OsCertificate } from './OsIcons.jsx';
+import { LINKS } from './projectLinks.js';
 
 /* Program Manager titlebar identity per feed kind */
 const FEED_ICON = { radar: OsMaps, docscan: OsText, vision: OsImageViewer, forecast: OsCertificate };
 
 /* ── every field below is sourced from the CV — nothing invented ────────── */
-/* ── PROJECT LINKS ───────────────────────────────────────────────────────
-   ONE place to edit URLs (was 8 duplicated `url:/repo:` fields across two
-   files). Fill these in when the projects are deployed — Launch / View
-   Source buttons render as soon as any value is non-null. Audit §3.1. */
-const LINKS = {
-  airadar:  { url: null, repo: null },   // TODO(shrey): AI Radar live URL + GitHub
-  contract: { url: null, repo: null },   // TODO(shrey): Contract Tracker
-  road:     { url: null, repo: null },   // TODO(shrey): Road Damage Detection
-  kitchen:  { url: null, repo: null },   // TODO(shrey): AI Kitchen Optimisation
-};
 
 const PROJECTS = [
   {
@@ -398,8 +389,7 @@ function ProjectWindow({ p, originPct, onEject, winCtl, state }) {
         <div className="pj-winbtns">
           <button className="win-btn" aria-label={`Minimize ${p.name}`}
             onClick={() => { playClick(); os.wAction('explorer', 'minimize'); }}>_</button>
-          <button className="win-btn" aria-hidden="true" tabIndex={-1}
-            onClick={() => playClick()}>□</button>
+          <button className="win-btn" aria-hidden="true" tabIndex={-1}>□</button>
           <button className="win-btn win-close" aria-label={`Close ${p.name}`}
             onClick={onEject}>✕</button>
         </div>
@@ -408,12 +398,16 @@ function ProjectWindow({ p, originPct, onEject, winCtl, state }) {
       <div className="pj-menubar">
         <span>File</span><span>Edit</span><span>View</span><span>Help</span>
         <span className="pj-menu-spacer" />
-        {p.url && (
-          <a className="pj-menu-launch" href={p.url} target="_blank" rel="noopener noreferrer"
-            onClick={() => playClick()}>
-            <PxExternalLink size={24} /> Launch
-          </a>
-        )}
+        {p.url
+          ? <a className="pj-menu-launch" href={p.url} target="_blank" rel="noopener noreferrer"
+              onClick={() => playClick()}>
+              <PxExternalLink size={24} /> Launch
+            </a>
+          : <span className="pj-menu-launch pj-menu-launch-disabled"
+              title="Not public yet — see Architecture for the build">
+              <PxExternalLink size={24} /> Launch
+            </span>
+        }
         {p.repo && (
           <a className="pj-menu-launch" href={p.repo} target="_blank" rel="noopener noreferrer"
             onClick={() => playClick()}>
@@ -444,7 +438,7 @@ function ProjectWindow({ p, originPct, onEject, winCtl, state }) {
 
             <div className="pj-scroll">
               {tab === 0 && (
-                <>
+                <div className="pj-tab-panel" key={`0-${p.id}`}>
                   <div className="pj-grp">
                     <span className="pj-tw">▼</span>Summary
                     <span className="pj-cnt">{p.sub}</span>
@@ -454,6 +448,12 @@ function ProjectWindow({ p, originPct, onEject, winCtl, state }) {
                       <p key={i}>{renderB(t)}</p>
                     ))}
                   </div>
+                  {p.arch?.[0] && (
+                    <div className="pw-signature">
+                      <span className="pw-signature-label">{p.arch[0][0]}</span>
+                      {renderB(p.arch[0][1])}
+                    </div>
+                  )}
                   <div className="pj-grp">
                     <span className="pj-tw">▼</span>Stack
                     <span className="pj-cnt">{p.chips.length} technologies</span>
@@ -461,11 +461,11 @@ function ProjectWindow({ p, originPct, onEject, winCtl, state }) {
                   <div className="pj-chips">
                     {p.chips.map(c => <span className="pj-chip" key={c}>{c}</span>)}
                   </div>
-                </>
+                </div>
               )}
 
               {tab === 1 && (
-                <>
+                <div className="pj-tab-panel" key={`1-${p.id}`}>
                   <div className="pj-grp">
                     <span className="pj-tw">▼</span>Architecture
                     <span className="pj-cnt">{p.arch.length} components</span>
@@ -478,11 +478,11 @@ function ProjectWindow({ p, originPct, onEject, winCtl, state }) {
                       </div>
                     ))}
                   </div>
-                </>
+                </div>
               )}
 
               {tab === 2 && (
-                <>
+                <div className="pj-tab-panel" key={`2-${p.id}`}>
                   <div className="pj-grp">
                     <span className="pj-tw">▼</span>Measured output
                     <span className="pj-cnt">{p.mets.length} metrics</span>
@@ -495,11 +495,11 @@ function ProjectWindow({ p, originPct, onEject, winCtl, state }) {
                       </div>
                     ))}
                   </div>
-                </>
+                </div>
               )}
 
               {tab === 3 && (
-                <>
+                <div className="pj-tab-panel" key={`3-${p.id}`}>
                   <div className="pj-grp">
                     <span className="pj-tw">▼</span>Run Log
                     <span className="pj-cnt">A:\PROJECTS\{p.vol}</span>
@@ -520,7 +520,7 @@ function ProjectWindow({ p, originPct, onEject, winCtl, state }) {
                   <div className="pj-chips">
                     {p.chips.map(c => <span className="pj-chip" key={c}>{c}</span>)}
                   </div>
-                </>
+                </div>
               )}
             </div>
           </div>
@@ -677,12 +677,19 @@ export default function ProjectsSection() {
     setOrigin(measureOrigin());
     setReading(true);
 
-    /* the boot ALWAYS runs — every disk, every insert, every time */
+    /* Full boot plays once per session so the moment lands — comparing all
+       four projects back-to-back (a normal hiring-manager workflow) shouldn't
+       pay the ~3.2s cost with zero new information every time after the
+       first. Subsequent inserts this session take the same fast path as
+       reducedMotion straight into launch(). */
+    const seen = sessionStorage.getItem('shreyos_pjboot_seen');
+    const skip = os.reducedMotion || seen;
     const go = () => {
-      if (os.reducedMotion) { launch(p); return; }
+      if (skip) { launch(p); return; }
+      sessionStorage.setItem('shreyos_pjboot_seen', '1');
       setBooting(p);
     };
-    setTimeout(go, os.reducedMotion ? 0 : 300);
+    setTimeout(go, skip ? 0 : 300);
   };
 
   const eject = () => {

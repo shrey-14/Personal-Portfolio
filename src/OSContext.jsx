@@ -112,6 +112,25 @@ function playDialup(onDone) {
   } catch (_) { doFinish(); }
 }
 
+/* The dial-up handshake is charming once; requiring it every single time a
+   visitor reaches Contact — including from the Contact section's own primary
+   CTA, when they're already maximally intent-qualified — is pure friction on
+   the highest-value action on the page. Play it in full the first time this
+   session, then skip straight through on every subsequent contact action.
+   Mirrors the sessionStorage gate already used for the startup chime. */
+const DIALUP_SEEN_KEY = 'shreyos_dialup_seen';
+function runDialupHandshake(setDialupOpen, setDialupPhase, onReady) {
+  if (sessionStorage.getItem(DIALUP_SEEN_KEY)) { onReady(); return; }
+  sessionStorage.setItem(DIALUP_SEEN_KEY, '1');
+  const phases = ['DIALING...', 'CONNECTING...', 'AUTHENTICATING...', 'CONNECTED!'];
+  setDialupOpen(true);
+  setDialupPhase(phases[0]);
+  phases.forEach((p, i) => { if (i > 0) setTimeout(() => setDialupPhase(p), i * 540); });
+  playDialup(() => {
+    setTimeout(() => { setDialupOpen(false); onReady(); }, 400);
+  });
+}
+
 /* Short upward "whoosh" — the sound of a message leaving. Shares the OS audio
    context so it obeys the same mute + first-gesture-unlock rules as everything. */
 function playWhoosh() {
@@ -353,31 +372,16 @@ export function OSProvider({ children }) {
     if (action === 'recycle')  { setCtxMenu(null); playClick(); setRecycleOpen(true); }
     if (action === 'shutdown') { setCtxMenu(null); playClick(); setShutdownOpen(true); }
     if (action === 'contact') {
-      // Dial-up handshake FIRST (the boot animation), then land on the
-      // Contact section with the same phosphor pulse as About / Projects.
+      // Dial-up handshake first visit only (see runDialupHandshake), then
+      // land on the official mail client (ContactWindow.jsx).
       setCtxMenu(null);
-      const phases = ['DIALING...', 'CONNECTING...', 'AUTHENTICATING...', 'CONNECTED!'];
-      setDialupOpen(true);
-      setDialupPhase(phases[0]);
-      phases.forEach((p, i) => { if (i > 0) setTimeout(() => setDialupPhase(p), i * 540); });
-      playDialup(() => {
-        // Boot animation first, then straight into the official mail client
-        // (ContactWindow.jsx) — not a scroll to the section.
-        setTimeout(() => { setDialupOpen(false); setContactOpen(true); }, 400);
-      });
+      runDialupHandshake(setDialupOpen, setDialupPhase, () => setContactOpen(true));
     }
-    // The Contact section's own CTA: same dial-up handshake, but it lands on
-    // the mail COMPOSE window (the 
-    // visitor is already at the section).
+    // The Contact section's own CTA: same handshake gate — the visitor is
+    // already at the section, so repeat-session friction here matters most.
     if (action === 'contact_mail') {
       setCtxMenu(null);
-      const phases = ['DIALING...', 'CONNECTING...', 'AUTHENTICATING...', 'CONNECTED!'];
-      setDialupOpen(true);
-      setDialupPhase(phases[0]);
-      phases.forEach((p, i) => { if (i > 0) setTimeout(() => setDialupPhase(p), i * 540); });
-      playDialup(() => {
-        setTimeout(() => { setDialupOpen(false); setContactOpen(true); }, 400);
-      });
+      runDialupHandshake(setDialupOpen, setDialupPhase, () => setContactOpen(true));
     }
   }, [gotoSection]);
 

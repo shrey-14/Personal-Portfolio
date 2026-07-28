@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-28T00:00:00.000Z",
+  "title": "Design System: SHREY/OS",
+  "extensions": {
+    "colorMeta": {
+      "windows-navy": {
+        "role": "primary",
+        "displayName": "Windows Navy",
+        "canonical": "#000080",
+        "tonalRamp": ["#05052e", "#0a0a52", "#000080", "#1a1aad", "#4747c9", "#7d7ddb", "#b3b3ea", "#e6e6f7"]
+      },
+      "terminal-amber": {
+        "role": "primary",
+        "displayName": "Terminal Amber",
+        "canonical": "#ffb454",
+        "tonalRamp": ["#3a2200", "#5c3600", "#7d4a00", "#a8641a", "#ffb454", "#ffc978", "#ffdea3", "#fff2d9"]
+      },
+      "os-accent": {
+        "role": "secondary",
+        "displayName": "OS Accent",
+        "canonical": "#e89020",
+        "tonalRamp": ["#331e00", "#663c00", "#995a00", "#cc7810", "#e89020", "#f0a94d", "#f7c583", "#fce3c2"]
+      },
+      "phosphor-green": {
+        "role": "tertiary",
+        "displayName": "Phosphor Green",
+        "canonical": "#39ff14",
+        "tonalRamp": ["#062600", "#0c4d00", "#147a00", "#1ea600", "#39ff14", "#6bff52", "#9fff8f", "#d4ffcc"]
+      },
+      "chrome-silver": {
+        "role": "neutral",
+        "displayName": "Classic Silver",
+        "canonical": "#c0c0c0",
+        "tonalRamp": ["#1a1a1a", "#333333", "#4d4d4d", "#808080", "#a6a6a6", "#c0c0c0", "#dfdfdf", "#f2f2f2"]
+      },
+      "desktop-graphite": {
+        "role": "neutral",
+        "displayName": "Desktop Graphite",
+        "canonical": "#1b1e24",
+        "tonalRamp": ["#08090b", "#101216", "#1b1e24", "#23272e", "#33383f", "#454b54", "#6b7688", "#a6adb8"]
+      },
+      "error-red": {
+        "role": "neutral",
+        "displayName": "Error Red",
+        "canonical": "#b00020",
+        "tonalRamp": ["#2b0008", "#4d000e", "#7a0018", "#b00020", "#d4334a", "#e0708a", "#efb0be", "#ffecec"]
+      },
+      "explorer-blue-gray": {
+        "role": "neutral",
+        "displayName": "Explorer Blue-Gray",
+        "canonical": "#8b929b",
+        "tonalRamp": ["#1a1c1f", "#2a2e33", "#454b52", "#6a707a", "#8b929b", "#aeb6bf", "#c9cfd6", "#e7ebef"]
+      },
+      "sepia-paper": {
+        "role": "neutral",
+        "displayName": "Sepia/Paper",
+        "canonical": "#9a9689",
+        "tonalRamp": ["#211f1b", "#3a3730", "#5c584d", "#7e7a6e", "#9a9689", "#b4b0a3", "#c9c5b8", "#f4f1ea"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero SHREY PATEL wordmark morph only — appears once per page load." },
+      "headline": { "displayName": "Headline", "purpose": "Section/app logotypes, e.g. the About.exe badge, at reduced Chakra Petch scale." },
+      "title": { "displayName": "Title", "purpose": "Window and card titles, System Properties identity text." },
+      "body": { "displayName": "Body", "purpose": "Prose, record content, About/Journey copy." },
+      "label": { "displayName": "Label", "purpose": "Chrome text — menu items, taskbar labels, spec rows, tray text." },
+      "micro-body": { "displayName": "Micro-body", "purpose": "Section-head captions and prose sized just under the Body floor — its own step, between Label and Body." },
+      "mono": { "displayName": "Mono", "purpose": "Terminal panes, boot sequences, status bars — anything reading as the machine talking." }
+    },
+    "shadows": [
+      { "name": "sunken-well", "value": "inset 1px 1px 0 var(--win-lt)", "purpose": "Recessed-fieldset / pressed-field glow, paired with the reversed bevel border." },
+      { "name": "signature-glow-light", "value": "0 0 12px rgba(0, 0, 128, 0.42)", "purpose": "Focus/active glow using the light-theme signature color." },
+      { "name": "signature-glow-dark", "value": "0 0 12px rgba(255, 180, 84, 0.5)", "purpose": "Focus/active glow using the dark-theme signature color." },
+      { "name": "crt-vignette", "value": "inset 0 0 22px rgba(0,0,0,0.85)", "purpose": "Screen-edge darkening on CRT/monitor-framed surfaces only." },
+      { "name": "floating-window", "value": "1px 1px 0 rgba(0,0,0,0.55), 4px 5px 0 rgba(0,0,0,0.16), 12px 16px 30px rgba(0,0,0,0.26)", "purpose": "Real elevation for draggable/floating windows over the desktop, stacked on the raised bevel border. The one sanctioned exception to bevel-only depth; reserved for floating windows, never static cards." }
+    ],
+    "motion": [
+      { "name": "ease-window", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Default easing for window open/drag/minimize transitions." },
+      { "name": "dur-hover", "value": "140ms", "purpose": "Standard hover/active state transition duration." }
+    ],
+    "breakpoints": [
+      { "name": "bp-mobile", "value": "900px" },
+      { "name": "bp-tablet", "value": "640px" },
+      { "name": "bp-phone", "value": "400px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Chrome Button",
+      "kind": "button",
+      "refersTo": "button-chrome",
+      "description": "Raised bevel button used for Start button, taskbar task buttons, window control buttons.",
+      "html": "<button class=\"ds-btn-chrome\">Start</button>",
+      "css": ".ds-btn-chrome { height: 24px; padding: 0 8px; background: var(--chrome, #c0c0c0); color: #000; font-family: var(--f-sys, 'IBM Plex Sans', sans-serif); font-size: 11px; font-weight: 700; border: 2px solid; border-top-color: var(--chrome-lt, #dfdfdf); border-left-color: var(--chrome-lt, #dfdfdf); border-right-color: var(--chrome-dk, #808080); border-bottom-color: var(--chrome-dk, #808080); border-radius: 0; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; } .ds-btn-chrome:active, .ds-btn-chrome.ds-active { border-top-color: var(--chrome-dk, #808080); border-left-color: var(--chrome-dk, #808080); border-right-color: var(--chrome-lt, #dfdfdf); border-bottom-color: var(--chrome-lt, #dfdfdf); } .ds-btn-chrome:focus-visible { outline: 2px dotted #fff; outline-offset: 1px; }"
+    },
+    {
+      "name": "Close Button",
+      "kind": "button",
+      "refersTo": "button-chrome",
+      "description": "Window titlebar close control — the one button allowed a non-bevel hover treatment (destructive signal).",
+      "html": "<button class=\"ds-btn-close\" aria-label=\"Close\">\u2715</button>",
+      "css": ".ds-btn-close { width: 16px; height: 14px; background: var(--chrome, #c0c0c0); color: #000; font-size: 9px; border: 1.5px solid; border-top-color: var(--chrome-lt, #dfdfdf); border-left-color: var(--chrome-lt, #dfdfdf); border-right-color: var(--chrome-dk, #808080); border-bottom-color: var(--chrome-dk, #808080); border-radius: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; } .ds-btn-close:hover { background: #c0392b; color: #fff; } .ds-btn-close:active { border-top-color: var(--chrome-dk, #808080); border-left-color: var(--chrome-dk, #808080); border-right-color: var(--chrome-lt, #dfdfdf); border-bottom-color: var(--chrome-lt, #dfdfdf); }"
+    },
+    {
+      "name": "Window Panel",
+      "kind": "card",
+      "refersTo": "window-titlebar",
+      "description": "Full window chrome: navy/amber titlebar gradient over a silver bevel-bordered panel body.",
+      "html": "<div class=\"ds-window\"><div class=\"ds-window-title\">SYSTEM.EXE</div><div class=\"ds-window-body\">Window content goes here.</div></div>",
+      "css": ".ds-window { background: var(--win-face, #c0c0c0); border: 2px solid; border-top-color: var(--chrome-lt, #dfdfdf); border-left-color: var(--chrome-lt, #dfdfdf); border-right-color: var(--chrome-dk, #808080); border-bottom-color: var(--chrome-dk, #808080); border-radius: 0; } .ds-window-title { height: 22px; display: flex; align-items: center; padding: 0 6px; background: linear-gradient(90deg, var(--tb-start, #000080), var(--tb-end, #1084d0)); color: #fff; font-family: var(--f-sys, 'IBM Plex Sans', sans-serif); font-size: 11px; font-weight: 700; } .ds-window-body { padding: 12px; font-family: var(--f-sys, 'IBM Plex Sans', sans-serif); font-size: 13px; color: var(--win-text, #000); }"
+    },
+    {
+      "name": "Sunken Field",
+      "kind": "input",
+      "refersTo": "well-sunken",
+      "description": "Pre-inverted bevel well — the single shared recipe for text fields, trays, and meters.",
+      "html": "<input class=\"ds-field-sunken\" type=\"text\" placeholder=\"C:\\&gt;\" />",
+      "css": ".ds-field-sunken { height: 24px; padding: 0 7px; background: var(--field-bg, #fff); color: var(--field-text, #000); font-family: var(--f-mono, 'IBM Plex Mono', monospace); font-size: 13px; border: 1.5px solid; border-top-color: var(--chrome-dk, #808080); border-left-color: var(--chrome-dk, #808080); border-right-color: var(--chrome-lt, #dfdfdf); border-bottom-color: var(--chrome-lt, #dfdfdf); border-radius: 0; box-shadow: inset 1px 1px 0 rgba(0,0,0,0.15); } .ds-field-sunken:focus-visible { outline: 2px solid var(--accent, #e89020); outline-offset: -2px; }"
+    },
+    {
+      "name": "Taskbar Task Button",
+      "kind": "nav",
+      "refersTo": "button-chrome",
+      "description": "Open-window entry in the taskbar; pressed/inverted bevel signals the active window.",
+      "html": "<button class=\"ds-tb-task ds-tb-task-active\">About.exe</button>",
+      "css": ".ds-tb-task { height: 24px; max-width: 172px; padding: 0 8px; background: var(--chrome, #c0c0c0); color: #000; font-family: var(--f-sys, 'IBM Plex Sans', sans-serif); font-size: 11px; border: 2px solid; border-top-color: var(--chrome-lt, #dfdfdf); border-left-color: var(--chrome-lt, #dfdfdf); border-right-color: var(--chrome-dk, #808080); border-bottom-color: var(--chrome-dk, #808080); border-radius: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; } .ds-tb-task-active { border-top-color: var(--chrome-dk, #808080); border-left-color: var(--chrome-dk, #808080); border-right-color: var(--chrome-lt, #dfdfdf); border-bottom-color: var(--chrome-lt, #dfdfdf); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Working Relic",
+    "overview": "SHREY/OS is not a retro-themed website — it is a Windows 95/98-era desktop that happens to run in a browser and happens to be a portfolio. Every window drags, every button depresses, every boot sequence actually boots. The chrome is authentic down to the 1px bevel, but nothing about it is inert set-dressing: the CRT boot, the dial-up handshake, the BSOD, the screensaver are all wired to real application state (OSContext), not looping video. The system's entire claim to craft rests on this distinction — a themed React site could copy the beige and the scanlines; it could not copy a taskbar that actually tracks open windows. Two hard rejections keep this honest: no flat modern SaaS surface (soft rounded corners, ambient gradients, floating cards) is allowed to leak in anywhere, and no section is allowed to invent its own visual identity — the OS is one continuous machine, not a set of themed pages wearing a shared header.",
+    "keyCharacteristics": [
+      "Hard 1–2px bevel borders (light top/left, dark bottom/right) are the only depth language for controls; soft shadows are reserved for a handful of cinematic/CRT moments, never for ordinary chrome.",
+      "One signature accent pair — Windows Navy in light mode, Terminal Amber in dark — is reused verbatim by every section.",
+      "Sharp corners everywhere except literal circular controls and the toggle switch.",
+      "Type is real web fonts standing in for period system faces so mobile never falls back to a different platform font than desktop."
+    ],
+    "rules": [
+      { "name": "The One Accent Rule", "body": "Every section's signature color is the same navy/amber pair, never a per-section hue. A section is allowed its own supporting palette but never its own primary identity color.", "section": "colors" },
+      { "name": "The Bevel-Only Rule", "body": "Depth on any interactive control comes from a 1–2px hard-edged bevel, never from border-radius + soft shadow. Soft shadow is reserved for CRT/cinematic effects only.", "section": "colors" },
+      { "name": "The One Wordmark Rule", "body": "Chakra Petch is reserved for logotype-scale moments. It never appears in body copy, buttons, or chrome.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Surfaces are flat at rest. Elevation appears only via the bevel-border pair, or a glow that responds to state, never as ambient decoration on a static element.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do build depth with the bevel-border pair (raised: light top/left, dark bottom/right; sunken: reversed) on every interactive control.",
+      "Do reuse the exact Windows Navy (#000080) / Terminal Amber (#ffb454) pair for any new section's signature identity — never introduce a new per-section hue.",
+      "Do keep corners sharp (0px radius) on all chrome, windows, buttons, and fields; reserve rounding for literal circles and the one toggle-switch pill.",
+      "Do keep Chakra Petch scarce — logotype scale only — so IBM Plex Sans/Mono carry everything else as one coherent chrome voice."
+    ],
+    "donts": [
+      "Don't introduce soft ambient shadows, rounded-corner cards, or gradient-mesh backgrounds anywhere — that is the explicitly rejected flat-modern-SaaS look.",
+      "Don't give a section its own accent hue distinct from the shared navy/amber signature pair.",
+      "Don't mix the bevel and soft-shadow depth languages on the same element.",
+      "Don't set data-theme from inside a section component — it's owned exclusively by OSContext and written once on <html>."
+    ]
+  }
+}
