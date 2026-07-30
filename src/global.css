@@ -649,9 +649,34 @@ body.cursor-hidden * {
     4px 5px 0 rgba(0, 0, 0, 0.16),
     12px 16px 30px rgba(0, 0, 0, 0.26);
   padding: 2px;
-  transition:
-    box-shadow 0.25s ease,
-    filter 0.25s ease;
+  transition: box-shadow 0.25s ease;
+}
+/* Inactive dimming rides on a pointer-events:none overlay faded with OPACITY,
+   not `filter` on the window itself. `filter` forces a repaint of the entire
+   window subtree, and focus changes on every single window click — the most
+   frequent interaction in the whole OS.
+
+   The old value was `saturate(0.92) brightness(0.985)`. Only the brightness
+   half is reproduced here: a flat tint cannot desaturate, and 8% saturation
+   loss on chrome that is already near-grey is imperceptible next to the
+   box-shadow change, which is what actually reads as "this window is behind".
+
+   Black rather than a grey mix on purpose — mixing toward mid-grey would
+   DARKEN the light theme but LIGHTEN the dark one, inverting the cue. */
+.win95-window::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 60;                /* above window content, incl. the titlebar */
+  pointer-events: none;
+  background: #000;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.win95-window.win-inactive::after {
+  /* Scaled by --chrome-reveal so the hero paint-as-figure pose (a bare photo,
+     reveal 0) is never tinted — same guard the shadows use. */
+  opacity: calc(0.03 * var(--chrome-reveal, 1));
 }
 /* Focused window sits a touch higher; inactive ones recede (dimmer, flatter). */
 .win95-window.win-active {
@@ -661,7 +686,7 @@ body.cursor-hidden * {
     16px 22px 40px rgba(0, 0, 0, 0.3);
 }
 .win95-window.win-inactive {
-  filter: saturate(0.92) brightness(0.985);
+  /* filter removed — see the ::after overlay above. */
   box-shadow:
     1px 1px 0 rgba(0, 0, 0, 0.45),
     3px 4px 0 rgba(0, 0, 0, 0.12),
@@ -1617,6 +1642,18 @@ body.cursor-hidden * {
   transform-origin: var(--ctx-ox, 0) var(--ctx-oy, 0);
   animation: ctxIn var(--dur-1) var(--ease-out);
 }
+/* Exit: the menu is held for one --dur-out after `pos` clears purely so this
+   can run. Inert while it fades — a menu on its way out must never take a
+   click that was aimed at whatever is behind it. */
+.ctx-menu.ctx-exiting {
+  animation: none;
+  opacity: 0;
+  transform: scale(0.98);
+  pointer-events: none;
+  transition:
+    opacity var(--dur-out) var(--ease-out),
+    transform var(--dur-out) var(--ease-out);
+}
 @keyframes ctxIn {
   from {
     opacity: 0;
@@ -1839,17 +1876,29 @@ body.cursor-hidden * {
   display: flex;
   box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
   transform-origin: bottom left;   /* rises out of the Start button */
-  animation: menuIn var(--dur-1) var(--ease-out);
+  /* CLOSED state is the base rule; [data-open="true"] is the open state. A
+     transition rather than a keyframe so a rapid re-open retargets from the
+     current opacity instead of snapping back to 0 (keyframes restart).
+     `visibility` is delayed by the exit duration so the menu stays paintable
+     while it fades, then leaves the tab order the instant it is gone. */
+  opacity: 0;
+  transform: translateY(4px);
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity var(--dur-out) var(--ease-out),
+    transform var(--dur-out) var(--ease-out),
+    visibility 0s linear var(--dur-out);
 }
-@keyframes menuIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+.start-menu[data-open="true"] {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    opacity var(--dur-1) var(--ease-out),
+    transform var(--dur-1) var(--ease-out),
+    visibility 0s;
 }
 
 /* Reduced-motion fallback for the chrome menus lives at the END of this file:
@@ -2572,13 +2621,28 @@ body.cursor-hidden * {
   font-size: 12px;
   /* The tray popup used to just appear while .ctx-menu and .start-menu both
      animated in — the odd one out in the same shell. Anchored bottom-right
-     because it hangs off the tray button above the taskbar. */
+     because it hangs off the tray button above the taskbar.
+     Closed state is the base rule; see .start-menu for why this is a
+     transition and not a keyframe. */
   transform-origin: bottom right;
-  animation: trayPopIn var(--dur-1) var(--ease-out);
+  opacity: 0;
+  transform: scale(0.96) translateY(3px);
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity var(--dur-out) var(--ease-out),
+    transform var(--dur-out) var(--ease-out),
+    visibility 0s linear var(--dur-out);
 }
-@keyframes trayPopIn {
-  from { opacity: 0; transform: scale(0.96) translateY(3px); }
-  to   { opacity: 1; transform: none; }
+.theme-popup[data-open="true"] {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    opacity var(--dur-1) var(--ease-out),
+    transform var(--dur-1) var(--ease-out),
+    visibility 0s;
 }
 .theme-popup-row {
   display: flex;
@@ -8674,10 +8738,17 @@ body.pj-booting .taskbar {
 }
 .jn-ro-bar i {
   position: absolute;
-  inset: 0 100% 0 0;
+  /* Full width, revealed with scaleX from the left rather than by animating
+     `right`. pct is scroll-driven, so the old version relaid out the bar on
+     every scroll update. The glow does scale horizontally with the fill, but
+     .jn-ro-bar is overflow:hidden and only 5px tall, so nearly all of a 6px
+     shadow is clipped already and the difference does not read. */
+  inset: 0;
+  transform-origin: left center;
+  transform: scaleX(0);
   background: var(--jn-sig);
   box-shadow: 0 0 6px var(--jn-sig-glow);
-  transition: right 0.12s linear;
+  transition: transform 0.12s linear;
 }
 
 /* ══════════ STATUS BAR ══════════ */
@@ -9901,6 +9972,9 @@ body.pj-booting .taskbar {
   --dur-2: 120ms;   /* hover + press feedback                                */
   --dur-3: 160ms;   /* small state changes (toggles, tabs)                   */
   --dur-hover: 140ms;
+  /* Exit is faster than entry: opening is the system responding to you and can
+     afford to be seen, closing is you having already decided. */
+  --dur-out: 60ms;
 
   --titlebar-font-chrome: 700 11px var(--f-sys);          /* Win95 chrome windows */
   --titlebar-font-app: 700 10.5px var(--f-sys); /* miniature tile titlebars */
@@ -12868,21 +12942,32 @@ body.cursor-hover .cursor-ring {
    CHROME MENU REDUCED MOTION
    ---------------------------------------------------------------------------
    Keep the fade — it still explains that something appeared — but drop the
-   scale/translate. Reduced motion means gentler, not zero.
+   movement. Reduced motion means gentler, not zero.
 
-   Must sit at the end of the file: .start-menu, .ctx-menu and .theme-popup
-   each declare the `animation` SHORTHAND, which resets animation-name. An
-   override placed next to any one of them loses to the shorthands declared
-   after it.
+   The three menus now hide in two different ways, so they need two treatments:
+     · .ctx-menu still uses a KEYFRAME, because it unmounts and is keyed per
+       cursor position — restarting is the correct semantic there. Swap the
+       keyframe for a pure fade.
+     · .start-menu / .theme-popup are always mounted and use TRANSITIONS, so
+       there is no animation-name to swap. Neutralise their transform instead
+       and let opacity carry the change.
+
+   Must sit at the end of the file: .theme-popup declares an `animation`
+   shorthand elsewhere, and each menu sets transform in its own base rule, so
+   an override placed beside any one of them loses to what follows.
 ═══════════════════════════════════════════════════════════════════════════ */
 @keyframes chromeFadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
+  .ctx-menu { animation-name: chromeFadeIn; }
+
+  /* Opacity still animates; only the slide/scale is removed. */
   .start-menu,
-  .ctx-menu,
-  .theme-popup { animation-name: chromeFadeIn; }
+  .start-menu[data-open="true"],
+  .theme-popup,
+  .theme-popup[data-open="true"] { transform: none; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

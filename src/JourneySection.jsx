@@ -534,7 +534,7 @@ export default function JourneySection() {
                       <span className="jn-ro-k">status</span>
                       <span className="jn-ro-v jn-ro-st">{status}</span>
                     </div>
-                    <div className="jn-ro-bar"><i style={{ right: `${100 - pct}%` }} /></div>
+                    <div className="jn-ro-bar"><i style={{ transform: `scaleX(${pct / 100})` }} /></div>
                   </div>
                 </div>
 

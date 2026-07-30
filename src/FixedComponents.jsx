@@ -441,7 +441,16 @@ const CTX_ITEMS = [
   { label:'Properties', action:'sysinfo' },
 ];
 
+/* Unlike StartMenu / ThemePopup this stays unmounted-when-closed and keyed per
+   cursor position ON PURPOSE. A right-click somewhere else must replay the open
+   from the NEW origin; an always-mounted transition would instead slide the
+   menu across the screen between the two click points, which is wrong.
+
+   The cost of unmounting is that there is nothing left to fade, so the last
+   position is held for one exit duration after `pos` clears. */
 function ContextMenu({ pos, onAction, onClose }) {
+  const [exiting, setExiting] = useState(null);   // last pos, kept for the fade
+
   useEffect(() => {
     if (!pos) return;
     const onKey = e => { if (e.key === 'Escape') onClose(); };
@@ -449,22 +458,36 @@ function ContextMenu({ pos, onAction, onClose }) {
     return () => document.removeEventListener('keydown', onKey);
   }, [pos, onClose]);
 
-  if (!pos) return null;
+  /* When pos clears, keep rendering the last position briefly so the exit
+     transition can run, then drop it. --dur-out is 60ms; 90ms covers it with
+     margin. Re-opening cancels the pending timer via the cleanup, so a fast
+     right-click-elsewhere remounts at the new origin instead of waiting. */
+  const prevPos = useRef(null);
+  useEffect(() => {
+    if (pos) { prevPos.current = pos; setExiting(null); return; }
+    if (!prevPos.current) return;
+    setExiting(prevPos.current);
+    const id = setTimeout(() => setExiting(null), 90);
+    return () => clearTimeout(id);
+  }, [pos]);
+
+  const active = pos || exiting;
+  if (!active) return null;
   // Clamp against the menu's DERIVED size, not a hardcoded guess —
   // rows ≈ 22px, dividers ≈ 8px, chrome ≈ 8px.
   const MENU_W = 190;
   const MENU_H = CTX_ITEMS.reduce((h, it) => h + (it === null ? 8 : 22), 8);
-  const left = Math.min(pos.x, window.innerWidth  - MENU_W);
-  const top  = Math.min(pos.y, window.innerHeight - MENU_H);
+  const left = Math.min(active.x, window.innerWidth  - MENU_W);
+  const top  = Math.min(active.y, window.innerHeight - MENU_H);
   /* Scale out of the cursor, not the menu's centre. Measured against the
      CLAMPED box: near a screen edge the menu slides back from pos, so the
      click point is no longer its top-left corner.
      The key remounts the menu per position, so a second right-click somewhere
      else replays the open from the new origin instead of teleporting. */
   return (
-    <div className="ctx-menu"
+    <div className={`ctx-menu${pos ? '' : ' ctx-exiting'}`}
          key={`${left},${top}`}
-         style={{ left, top, '--ctx-ox': `${pos.x - left}px`, '--ctx-oy': `${pos.y - top}px` }}>
+         style={{ left, top, '--ctx-ox': `${active.x - left}px`, '--ctx-oy': `${active.y - top}px` }}>
       {CTX_ITEMS.map((item, i) =>
         item === null
           ? <div key={i} className="ctx-div" />
@@ -759,10 +782,15 @@ function RecycleBinDialog({ open, onClose }) {
   );
 }
 
+/* Stays mounted and is hidden with CSS rather than unmounted, so opening and
+   closing run as interruptible TRANSITIONS. As keyframes, hammering Start
+   replayed the open from frame zero every time instead of retargeting from
+   wherever the previous one had got to. `visibility: hidden` in the closed
+   state also keeps it out of the tab order and the a11y tree. */
 function StartMenu({ open, onAction, onClose }) {
-  if (!open) return null;
   return (
-    <div className="start-menu">
+    <div className="start-menu" data-open={open ? 'true' : 'false'}
+         aria-hidden={open ? undefined : 'true'}>
       <div className="start-strip"><span className="start-brand">SHREY/OS</span></div>
       <div className="start-items">
         {START_ITEMS.map((item, i) =>
@@ -957,11 +985,12 @@ function DisplayProperties({ open, onClose, theme, wallpaperId, onApply }) {
   );
 }
 
+/* Same always-mounted pattern as StartMenu — see the note there. */
 function ThemePopup({ open, theme, onToggle, onOpenSettings, onClose }) {
-  if (!open) return null;
   return (
     <>
-      <div className="theme-popup">
+      <div className="theme-popup" data-open={open ? 'true' : 'false'}
+           aria-hidden={open ? undefined : 'true'}>
         <div className="theme-popup-row">
           <span className="theme-popup-label">
             {theme === 'dark' ? <><PxLightbulbOff className="theme-pop-ico" size={24} /><span>Dark Mode</span></> : <><PxLightbulb className="theme-pop-ico" size={24} /><span>Light Mode</span></>}
