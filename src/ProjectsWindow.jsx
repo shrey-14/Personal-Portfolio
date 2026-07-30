@@ -269,7 +269,9 @@ export default function ProjectsWindow() {
   const [selId, setSelId] = useState('airadar');
   const [tab, setTab] = useState(0);
   const winRef = useRef(null);
-  const dragRef = useRef({ tx: 0, ty: 0 });
+  const dragRef = useRef({ tx: 0, ty: 0, pointerId: null, raf: 0 });
+
+  useEffect(() => () => { if (dragRef.current.raf) cancelAnimationFrame(dragRef.current.raf); }, []);
 
   /* ProjectsSection fires this after DOS boot to pre-select the disk */
   useEffect(() => {
@@ -286,31 +288,49 @@ export default function ProjectsWindow() {
     if (e.target.closest?.('.win-btn')) return;
     const el = winRef.current; if (!el) return;
     const st = dragRef.current;
+    // Multi-touch protection: a second finger mid-drag would jump the window.
+    if (st.pointerId != null) return;
+
+    const bar = e.currentTarget;          // captured now — currentTarget is null once async
     const rect = el.getBoundingClientRect();
     const homeLeft = rect.left - st.tx, homeTop = rect.top - st.ty, w = rect.width;
     const sx = e.clientX, sy = e.clientY, tx0 = st.tx, ty0 = st.ty;
+
+    st.pointerId = e.pointerId;
+    try { bar.setPointerCapture(e.pointerId); } catch { /* capture unsupported */ }
+
+    const flush = () => {
+      st.raf = 0;
+      el.style.transform = `translate(${st.tx}px,${st.ty}px)`;
+    };
     const onMove = ev => {
+      if (ev.pointerId !== st.pointerId) return;
       let dtx = tx0 + (ev.clientX - sx), dty = ty0 + (ev.clientY - sy);
       dtx = Math.max(-(w - 80) - homeLeft, Math.min(window.innerWidth - 80 - homeLeft, dtx));
       dty = Math.max(-homeTop, Math.min(window.innerHeight - 54 - homeTop, dty));
-      dragRef.current = { tx: dtx, ty: dty };
-      el.style.transform = `translate(${dtx}px,${dty}px)`;
+      st.tx = dtx; st.ty = dty;
+      // One composited write per frame — pointermove outpaces the display.
+      if (!st.raf) st.raf = requestAnimationFrame(flush);
     };
-    const onUp = () => {
-      document.removeEventListener('pointermove', onMove);
-      document.removeEventListener('pointerup', onUp);
-      document.removeEventListener('pointercancel', onUp);
+    const onUp = ev => {
+      if (ev.pointerId !== st.pointerId) return;
+      if (st.raf) { cancelAnimationFrame(st.raf); flush(); }
+      st.pointerId = null;
+      try { bar.releasePointerCapture(ev.pointerId); } catch { /* already released */ }
+      bar.removeEventListener('pointermove', onMove);
+      bar.removeEventListener('pointerup', onUp);
+      bar.removeEventListener('pointercancel', onUp);
     };
-    document.addEventListener('pointermove', onMove);
-    document.addEventListener('pointerup', onUp);
-    document.addEventListener('pointercancel', onUp);
+    bar.addEventListener('pointermove', onMove);
+    bar.addEventListener('pointerup', onUp);
+    bar.addEventListener('pointercancel', onUp);
     e.preventDefault();
   }, []);
 
   if (!winState.open || winState.minimized) return null;
 
   return (
-    <div className="pw-window" ref={winRef}>
+    <div className="pw-window" ref={winRef} data-win-id="explorer">
       {/* titlebar */}
       <div className="pw-titlebar draggable-titlebar" onPointerDown={onTitlebarDown}>
         <span className="pw-title-ico"><OsHardDisk size={16} className="title-ico-img" /></span>

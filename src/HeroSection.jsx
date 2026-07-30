@@ -181,32 +181,62 @@ function Win95Window({ title, titleIcon, x, y, z = 10,
     ref.current.style.zIndex = topZ;
   }, [winId, onFocus]);
 
+  /* Drag state. Deliberately drives left/top rather than transform: the scroll
+     choreography in applyProgress owns this element's `transform` and rewrites
+     it every frame, so a transform-based drag would be wiped on the next
+     scroll. left/top is a separate channel, so a dragged window stays put. */
+  const drag = useRef({ pointerId: null, raf: 0, nx: 0, ny: 0 });
+
+  useEffect(() => () => { if (drag.current.raf) cancelAnimationFrame(drag.current.raf); }, []);
+
   const onTitlebarPointerDown = useCallback(e => {
     if (e.target.closest?.('.win-btn')) return;
     if (winId) onFocus?.(winId);
     if (!ref.current) return;
+    const d = drag.current;
+    // Multi-touch protection: once a pointer owns the drag, ignore later ones.
+    // Without this, a second finger snaps the window to its position.
+    if (d.pointerId !== null) return;
+
+    const el  = ref.current;
+    const bar = e.currentTarget;          // captured now — currentTarget is null once async
     topZ++;
-    ref.current.style.zIndex = topZ;
-    const rect = ref.current.getBoundingClientRect();
+    el.style.zIndex = topZ;
+    const rect = el.getBoundingClientRect();
     const ox = e.clientX - rect.left;
     const oy = e.clientY - rect.top;
     const w  = rect.width;
+
+    d.pointerId = e.pointerId;
+    try { bar.setPointerCapture(e.pointerId); } catch { /* capture unsupported */ }
+
+    const flush = () => {
+      d.raf = 0;
+      el.style.left = d.nx + 'px';
+      el.style.top  = d.ny + 'px';
+    };
     const onMove = ev => {
+      if (ev.pointerId !== d.pointerId) return;
       // Clamp so the titlebar can never leave the viewport — windows can't be lost.
-      const nx = Math.max(-w + 60, Math.min(window.innerWidth - 60, ev.clientX - ox));
+      d.nx = Math.max(-w + 60, Math.min(window.innerWidth - 60, ev.clientX - ox));
       // 54 = taskbar (32) + titlebar (22): the bar can never swallow a window.
-      const ny = Math.max(0, Math.min(window.innerHeight - 54, ev.clientY - oy));
-      ref.current.style.left = nx + 'px';
-      ref.current.style.top  = ny + 'px';
+      d.ny = Math.max(0, Math.min(window.innerHeight - 54, ev.clientY - oy));
+      // Coalesce to one write per frame: pointermove outpaces the display on
+      // 120Hz+ input, and every left/top write costs a layout pass.
+      if (!d.raf) d.raf = requestAnimationFrame(flush);
     };
-    const onUp = () => {
-      document.removeEventListener('pointermove', onMove);
-      document.removeEventListener('pointerup', onUp);
-      document.removeEventListener('pointercancel', onUp);
+    const onUp = ev => {
+      if (ev.pointerId !== d.pointerId) return;
+      if (d.raf) { cancelAnimationFrame(d.raf); flush(); }
+      d.pointerId = null;
+      try { bar.releasePointerCapture(ev.pointerId); } catch { /* already released */ }
+      bar.removeEventListener('pointermove', onMove);
+      bar.removeEventListener('pointerup', onUp);
+      bar.removeEventListener('pointercancel', onUp);
     };
-    document.addEventListener('pointermove', onMove);
-    document.addEventListener('pointerup', onUp);
-    document.addEventListener('pointercancel', onUp);
+    bar.addEventListener('pointermove', onMove);
+    bar.addEventListener('pointerup', onUp);
+    bar.addEventListener('pointercancel', onUp);
     e.preventDefault();
   }, [winId, onFocus]);
 
@@ -215,6 +245,7 @@ function Win95Window({ title, titleIcon, x, y, z = 10,
   return (
     <div
       ref={setRefs}
+      data-win-id={winId}
       className={`win95-window${active ? ' win-active' : ' win-inactive'}${className ? ' ' + className : ''}`}
       style={{ display: minimized ? 'none' : undefined, ...style }}
       onMouseDown={bringToFront}
@@ -275,10 +306,13 @@ function SpotlightFigure() {
   const baseImgRef   = useRef(null);
   const revealRef    = useRef(null);
   const revealImgRef = useRef(null);
-  const reduced = useMemo(
-    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches, []);
-  const fine = useMemo(
-    () => window.matchMedia('(pointer: fine)').matches, []);
+  /* Both read from OSContext rather than matchMedia. These were useMemo(…, [])
+     one-shots, so toggling "reduce motion" (or docking a mouse) mid-session
+     never reached the tilt/glare loop. OSContext owns both and updates them —
+     and per PRODUCT.md it is the only place that should. */
+  const os = useOS();
+  const reduced = os.reducedMotion;
+  const fine = !os.vp.coarse;
 
   useEffect(() => {
     if (reduced || !fine) return;
@@ -709,10 +743,11 @@ function SelectionRect({ rect }) {
 function MobileReveal({ children, onVisible, delay = 0 }) {
   const ref = useRef(null);
   const [inView, setInView] = useState(false);
+  const { reducedMotion } = useOS();
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (reducedMotion) {
       setInView(true); onVisible?.();
       return;
     }
@@ -725,7 +760,7 @@ function MobileReveal({ children, onVisible, delay = 0 }) {
     }, { threshold: 0.25 });
     io.observe(el);
     return () => io.disconnect();
-  }, [onVisible]);
+  }, [onVisible, reducedMotion]);
   return (
     <div ref={ref} className={`mob-reveal${inView ? ' mob-in' : ''}`}
       style={{ transitionDelay: `${delay}ms` }}>

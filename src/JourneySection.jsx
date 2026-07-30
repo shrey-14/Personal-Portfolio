@@ -34,6 +34,7 @@
      progress it needs to reach stage 3 — the same failure About@420vh caused.
    ═════════════════════════════════════════════════════════════════════════ */
 import { useState, useRef, useEffect, useCallback } from 'react';
+import useWindowDrag from './useWindowDrag';
 import { useOS, playClick } from './OSContext';
 
 /* Safe JSX bold-splitter for static strings containing only <b>…</b> spans —
@@ -327,7 +328,7 @@ export default function JourneySection() {
   const rootRef  = useRef(null);
   const trackRef = useRef(null);
   const winRef   = useRef(null);
-  const dragRef  = useRef({ tx: 0, ty: 0 });
+  const onTitlebarDown = useWindowDrag(winRef, { enabled: !!winCtl });
 
   const [prog, setProg] = useState(0);
   const [live, setLive] = useState(0);
@@ -392,31 +393,6 @@ export default function JourneySection() {
   }, []);
 
 
-  /* drag — clamp math mirrors SkillsSection.onTitlebarDown exactly */
-  const onTitlebarDown = useCallback(e => {
-    if (!winCtl || (e.target.closest && e.target.closest('.win-btn'))) return;
-    const el = winRef.current; if (!el) return;
-    const st = dragRef.current;
-    const rect = el.getBoundingClientRect();
-    const homeLeft = rect.left - st.tx, homeTop = rect.top - st.ty, w = rect.width;
-    const sx = e.clientX, sy = e.clientY, tx0 = st.tx, ty0 = st.ty;
-    const onMove = ev => {
-      let dtx = tx0 + (ev.clientX - sx), dty = ty0 + (ev.clientY - sy);
-      dtx = Math.max(-(w - 80) - homeLeft, Math.min((window.innerWidth - 80) - homeLeft, dtx));
-      dty = Math.max(-homeTop, Math.min((window.innerHeight - 54) - homeTop, dty));
-      dragRef.current = { tx: dtx, ty: dty };
-      el.style.transform = `translate(${dtx}px, ${dty}px)`;
-    };
-    const onUp = () => {
-      document.removeEventListener('pointermove', onMove);
-      document.removeEventListener('pointerup', onUp);
-      document.removeEventListener('pointercancel', onUp);
-    };
-    document.addEventListener('pointermove', onMove);
-    document.addEventListener('pointerup', onUp);
-    document.addEventListener('pointercancel', onUp);
-    e.preventDefault();
-  }, [winCtl]);
 
   const jumpTo = i => {
     playClick();
@@ -456,7 +432,7 @@ export default function JourneySection() {
             </header>
 
             {!hidden && (
-            <div className="jn-win" ref={winRef}>
+            <div className="jn-win" ref={winRef} data-win-id="journey">
               <div className="jn-titlebar draggable-titlebar" onPointerDown={onTitlebarDown}>
                 <span className="tb-live-dot" />
                 <svg className="jn-tico" viewBox="0 0 16 16" aria-hidden="true">
@@ -558,7 +534,7 @@ export default function JourneySection() {
                       <span className="jn-ro-k">status</span>
                       <span className="jn-ro-v jn-ro-st">{status}</span>
                     </div>
-                    <div className="jn-ro-bar"><i style={{ right: `${100 - pct}%` }} /></div>
+                    <div className="jn-ro-bar"><i style={{ transform: `scaleX(${pct / 100})` }} /></div>
                   </div>
                 </div>
 

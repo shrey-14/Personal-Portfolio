@@ -24,6 +24,7 @@
      </FixedComponents></OSProvider>
    ═════════════════════════════════════════════════════════════════════════ */
 import { useState, useRef, useEffect, useCallback } from 'react';
+import useWindowDrag from './useWindowDrag';
 import { useOS, playClick, playWindowOpen } from './OSContext';
 
 /* Renders a static string containing only <b>…</b> spans as safe JSX —
@@ -242,7 +243,7 @@ export default function AboutSection() {
 
   const rootRef = useRef(null);
   const winRef  = useRef(null);
-  const dragRef = useRef({ tx: 0, ty: 0 });
+  const onTitlebarDown = useWindowDrag(winRef, { enabled: !!winCtl });
   /* Live open flag mirror — re-entering the section relaunches a closed
      window instead of leaving a permanently empty scroll track. */
   const winOpenRef = useRef(false);
@@ -336,31 +337,6 @@ export default function AboutSection() {
     };
   }, []);
 
-  /* ── drag (transform-based, viewport-clamped — mirrors SkillsSection) ─── */
-  const onTitlebarDown = useCallback(e => {
-    if (!winCtl || (e.target.closest && e.target.closest('.win-btn'))) return;
-    const el = winRef.current; if (!el) return;
-    const st = dragRef.current;
-    const rect = el.getBoundingClientRect();
-    const homeLeft = rect.left - st.tx, homeTop = rect.top - st.ty, w = rect.width;
-    const sx = e.clientX, sy = e.clientY, tx0 = st.tx, ty0 = st.ty;
-    const onMove = ev => {
-      let dtx = tx0 + (ev.clientX - sx), dty = ty0 + (ev.clientY - sy);
-      dtx = Math.max(-(w - 80) - homeLeft, Math.min((window.innerWidth - 80) - homeLeft, dtx));
-      dty = Math.max(-homeTop, Math.min((window.innerHeight - 54) - homeTop, dty));
-      dragRef.current = { tx: dtx, ty: dty };
-      el.style.transform = `translate(${dtx}px, ${dty}px)`;
-    };
-    const onUp = () => {
-      document.removeEventListener('pointermove', onMove);
-      document.removeEventListener('pointerup', onUp);
-      document.removeEventListener('pointercancel', onUp);
-    };
-    document.addEventListener('pointermove', onMove);
-    document.addEventListener('pointerup', onUp);
-    document.addEventListener('pointercancel', onUp);
-    e.preventDefault();
-  }, [winCtl]);
 
   /* ── tab click: swap the pinned panel, lock the driver for that band.
      Identical on every screen size. */
@@ -403,7 +379,7 @@ export default function AboutSection() {
           <span className="ab-rule" />
         </header>
 
-        <div className="ab-win" ref={winRef}
+        <div className="ab-win" ref={winRef} data-win-id="about"
           style={winCtl && (!winState.open || winState.minimized) ? { display: 'none' } : undefined}>
           <div className="ab-crt" aria-hidden="true" />
 

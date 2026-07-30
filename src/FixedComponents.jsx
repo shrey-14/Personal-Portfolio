@@ -18,6 +18,7 @@ import {
 } from './OSContext';
 import ContactWindow from './ContactWindow';
 import ProjectsWindow from './ProjectsWindow';
+import WindowZoomFX from './WindowZoomFX';
 import {
   PxAppWindows, PxLightbulb, PxLightbulbOff, PxVolume, PxVolumeMute, PxSignal,
 } from './PixelIcons.jsx';
@@ -29,10 +30,13 @@ import {
 function DotRingCursor() {
   const dotRef  = useRef(null);
   const ringRef = useRef(null);
+  /* From OSContext, not matchMedia: these were one-shot reads in a `[]` effect,
+     so turning on "reduce motion" mid-session left the custom cursor running
+     and the native cursor hidden until reload. */
+  const { reducedMotion, vp } = useOS();
 
   useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    if (!window.matchMedia('(pointer: fine)').matches) return;
+    if (reducedMotion || vp.coarse) return;
     document.body.classList.add('cursor-hidden');
 
     let mx = window.innerWidth / 2, my = window.innerHeight / 2;
@@ -83,7 +87,7 @@ function DotRingCursor() {
       document.body.classList.remove('cursor-hidden');
       document.body.classList.remove('cursor-hover');
     };
-  }, []);
+  }, [reducedMotion, vp.coarse]);
 
   return (
     <>
@@ -94,9 +98,10 @@ function DotRingCursor() {
 }
 
 // ── Desktop Icon ──────────────────────────────────────────────────────────────
-function DesktopIcon({ icon, onDblClick }) {
+function DesktopIcon({ icon, onDblClick, index = 0 }) {
   const [sel, setSel] = useState(false);
   const iconRef = useRef(null);
+  const { reducedMotion, vp } = useOS();
 
   const handleClick    = () => { playClick(); setSel(true); setTimeout(() => setSel(false), 380); };
   const handleDblClick = () => {
@@ -113,8 +118,7 @@ function DesktopIcon({ icon, onDblClick }) {
      its label glow lifts. Pure transform on the inner frame → compositor-cheap.
      Only active on fine pointers without reduced-motion. */
   useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    if (!window.matchMedia('(pointer: fine)').matches) return;
+    if (reducedMotion || vp.coarse) return;
     const el = iconRef.current;
     if (!el) return;
     const RADIUS = 90;      // px within which the pull engages
@@ -160,7 +164,7 @@ function DesktopIcon({ icon, onDblClick }) {
       window.removeEventListener('scroll', invalidate);
       if (raf) cancelAnimationFrame(raf);
     };
-  }, []);
+  }, [reducedMotion, vp.coarse]);
 
   const DeskIco = WIN98[icon.id];
   const Inner = (
@@ -173,7 +177,8 @@ function DesktopIcon({ icon, onDblClick }) {
   );
 
   return (
-    <div className="desktop-icon" ref={iconRef} data-iconid={icon.id}>
+    <div className="desktop-icon" ref={iconRef} data-iconid={icon.id}
+         style={{ '--i': index }}>
       <button className="desktop-icon-inner" aria-label={icon.label}
         onClick={handleClick} onDoubleClick={handleDblClick}>
         {Inner}
@@ -415,7 +420,8 @@ function DialupOverlay({ phase }) {
           <div className={`dialup-status${done ? ' dialup-done' : ''}`}>{phase}</div>
           <div className="dialup-bar-wrap">
             <div className="dialup-bar">
-              <div className="dialup-fill" style={{ width:`${Math.round((baud/56000)*100)}%` }} />
+              <div className="dialup-fill"
+                   style={{ clipPath:`inset(0 ${100 - Math.round((baud/56000)*100)}% 0 0)` }} />
             </div>
           </div>
           <div className="dialup-hint">Please wait while connecting...</div>
@@ -435,7 +441,16 @@ const CTX_ITEMS = [
   { label:'Properties', action:'sysinfo' },
 ];
 
+/* Unlike StartMenu / ThemePopup this stays unmounted-when-closed and keyed per
+   cursor position ON PURPOSE. A right-click somewhere else must replay the open
+   from the NEW origin; an always-mounted transition would instead slide the
+   menu across the screen between the two click points, which is wrong.
+
+   The cost of unmounting is that there is nothing left to fade, so the last
+   position is held for one exit duration after `pos` clears. */
 function ContextMenu({ pos, onAction, onClose }) {
+  const [exiting, setExiting] = useState(null);   // last pos, kept for the fade
+
   useEffect(() => {
     if (!pos) return;
     const onKey = e => { if (e.key === 'Escape') onClose(); };
@@ -443,15 +458,36 @@ function ContextMenu({ pos, onAction, onClose }) {
     return () => document.removeEventListener('keydown', onKey);
   }, [pos, onClose]);
 
-  if (!pos) return null;
+  /* When pos clears, keep rendering the last position briefly so the exit
+     transition can run, then drop it. --dur-out is 60ms; 90ms covers it with
+     margin. Re-opening cancels the pending timer via the cleanup, so a fast
+     right-click-elsewhere remounts at the new origin instead of waiting. */
+  const prevPos = useRef(null);
+  useEffect(() => {
+    if (pos) { prevPos.current = pos; setExiting(null); return; }
+    if (!prevPos.current) return;
+    setExiting(prevPos.current);
+    const id = setTimeout(() => setExiting(null), 90);
+    return () => clearTimeout(id);
+  }, [pos]);
+
+  const active = pos || exiting;
+  if (!active) return null;
   // Clamp against the menu's DERIVED size, not a hardcoded guess —
   // rows ≈ 22px, dividers ≈ 8px, chrome ≈ 8px.
   const MENU_W = 190;
   const MENU_H = CTX_ITEMS.reduce((h, it) => h + (it === null ? 8 : 22), 8);
-  const left = Math.min(pos.x, window.innerWidth  - MENU_W);
-  const top  = Math.min(pos.y, window.innerHeight - MENU_H);
+  const left = Math.min(active.x, window.innerWidth  - MENU_W);
+  const top  = Math.min(active.y, window.innerHeight - MENU_H);
+  /* Scale out of the cursor, not the menu's centre. Measured against the
+     CLAMPED box: near a screen edge the menu slides back from pos, so the
+     click point is no longer its top-left corner.
+     The key remounts the menu per position, so a second right-click somewhere
+     else replays the open from the new origin instead of teleporting. */
   return (
-    <div className="ctx-menu" style={{ left, top }}>
+    <div className={`ctx-menu${pos ? '' : ' ctx-exiting'}`}
+         key={`${left},${top}`}
+         style={{ left, top, '--ctx-ox': `${active.x - left}px`, '--ctx-oy': `${active.y - top}px` }}>
       {CTX_ITEMS.map((item, i) =>
         item === null
           ? <div key={i} className="ctx-div" />
@@ -746,10 +782,15 @@ function RecycleBinDialog({ open, onClose }) {
   );
 }
 
+/* Stays mounted and is hidden with CSS rather than unmounted, so opening and
+   closing run as interruptible TRANSITIONS. As keyframes, hammering Start
+   replayed the open from frame zero every time instead of retargeting from
+   wherever the previous one had got to. `visibility: hidden` in the closed
+   state also keeps it out of the tab order and the a11y tree. */
 function StartMenu({ open, onAction, onClose }) {
-  if (!open) return null;
   return (
-    <div className="start-menu">
+    <div className="start-menu" data-open={open ? 'true' : 'false'}
+         aria-hidden={open ? undefined : 'true'}>
       <div className="start-strip"><span className="start-brand">SHREY/OS</span></div>
       <div className="start-items">
         {START_ITEMS.map((item, i) =>
@@ -944,11 +985,12 @@ function DisplayProperties({ open, onClose, theme, wallpaperId, onApply }) {
   );
 }
 
+/* Same always-mounted pattern as StartMenu — see the note there. */
 function ThemePopup({ open, theme, onToggle, onOpenSettings, onClose }) {
-  if (!open) return null;
   return (
     <>
-      <div className="theme-popup">
+      <div className="theme-popup" data-open={open ? 'true' : 'false'}
+           aria-hidden={open ? undefined : 'true'}>
         <div className="theme-popup-row">
           <span className="theme-popup-label">
             {theme === 'dark' ? <><PxLightbulbOff className="theme-pop-ico" size={24} /><span>Dark Mode</span></> : <><PxLightbulb className="theme-pop-ico" size={24} /><span>Light Mode</span></>}
@@ -1033,6 +1075,7 @@ function Win95Taskbar({ clock, onAction, muted, onToggleMute, wins, onWinAction,
         <div className="tb-tasks">
           {TB_WINS.filter(w => wins?.[w.id]?.open && stage >= w.minStage).map(w => (
             <button key={w.id}
+              data-win-id={w.id}
               className={`tb-task tb-task-in${!wins[w.id].minimized ? ' tb-active' : ''}`}
               onClick={() => { playClick(); onWinAction(w.id, 'toggle'); }}>
               <w.Ico className="tb-task-ico" size={24} /> {w.label}
@@ -1249,6 +1292,7 @@ function ScrollToTop() {
   const btnRef  = useRef(null);
   const arcRef  = useRef(null);
   const stateRef = useRef({ visible: false, full: false });
+  const { reducedMotion } = useOS();
 
   useEffect(() => {
     let raf = null;
@@ -1288,8 +1332,9 @@ function ScrollToTop() {
 
   const onClick = () => {
     playClick();
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+    /* Read at click time, so this was never stale — routed through OSContext
+       for consistency with the one-state-hub rule in PRODUCT.md. */
+    window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
   };
 
   // SVG ring metrics — r=22 → circumference ~138.23
@@ -1357,6 +1402,7 @@ export default function FixedComponents({ children }) {
     <>
       <SiteBackground />
       <DotRingCursor />
+      <WindowZoomFX />
 
       <ContextMenu pos={os.ctxMenu} onAction={os.handleAction} onClose={() => os.setCtxMenu(null)} />
       <AboutDialog open={os.aboutOpen} onClose={() => os.setAboutOpen(false)} />
@@ -1387,8 +1433,8 @@ export default function FixedComponents({ children }) {
       {/* desktop icons — persistent across every section */}
       <div className="fixed-layer">
         <div className="icons-col">
-          {DESKTOP_ICONS.map(icon => (
-            <DesktopIcon key={icon.id} icon={icon}
+          {DESKTOP_ICONS.map((icon, i) => (
+            <DesktopIcon key={icon.id} icon={icon} index={i}
               onDblClick={ic => os.handleAction(ic.dblAction || '')} />
           ))}
         </div>
