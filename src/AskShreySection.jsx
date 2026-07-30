@@ -285,7 +285,7 @@ export default function AskShreySection() {
         </header>
 
         {/* Win95 window */}
-        <div className={`at-win${hidden ? ' at-win-hidden' : ''}`} ref={winRef}>
+        <div className={`at-win${hidden ? ' at-win-hidden' : ''}`} ref={winRef} data-win-id="aiterminal">
 
           {/* titlebar */}
           <div className="at-titlebar draggable-titlebar" onPointerDown={onTitlebarDown}>

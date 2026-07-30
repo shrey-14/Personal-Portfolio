@@ -866,7 +866,11 @@ export default function CRTBootAnimation({ onComplete, autoPlay = true }) {
     canvas.addEventListener("click", skip);
 
     /* Reduced motion: the boot is exactly the class of flicker the preference
-       exists for — hand off immediately, no tube warm-up, no scanlines. */
+       exists for — hand off immediately, no tube warm-up, no scanlines.
+
+       Reads matchMedia directly rather than os.reducedMotion ON PURPOSE: App
+       renders CRTBootAnimation in the !bootDone branch, OUTSIDE OSProvider, so
+       there is no context to read here. Do not "consolidate" this one. */
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       const id = setTimeout(() => onComplete?.(), 0);
       return () => {
@@ -1120,6 +1124,8 @@ export function CRTShutdownAnimation({ onRestart, playFx }) {
     if (!canvas) return;
     const S = stateRef.current;
 
+    /* Direct matchMedia by necessity — this component mounts outside
+       OSProvider (see the note in the boot effect above). */
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       setPlate(true);
       return;

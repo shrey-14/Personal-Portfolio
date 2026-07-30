@@ -369,7 +369,7 @@ export default function SkillsSection() {
         <span className="sk-rule" />
       </header>
 
-      <div className="sk-win" ref={winRef}
+      <div className="sk-win" ref={winRef} data-win-id="sysmonitor"
         style={winCtl && (!winState.open || winState.minimized) ? { display: 'none' } : undefined}>
         <div className="sk-crt" aria-hidden="true" />
 

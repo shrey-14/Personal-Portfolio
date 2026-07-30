@@ -432,7 +432,7 @@ export default function JourneySection() {
             </header>
 
             {!hidden && (
-            <div className="jn-win" ref={winRef}>
+            <div className="jn-win" ref={winRef} data-win-id="journey">
               <div className="jn-titlebar draggable-titlebar" onPointerDown={onTitlebarDown}>
                 <span className="tb-live-dot" />
                 <svg className="jn-tico" viewBox="0 0 16 16" aria-hidden="true">

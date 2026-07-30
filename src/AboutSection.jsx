@@ -379,7 +379,7 @@ export default function AboutSection() {
           <span className="ab-rule" />
         </header>
 
-        <div className="ab-win" ref={winRef}
+        <div className="ab-win" ref={winRef} data-win-id="about"
           style={winCtl && (!winState.open || winState.minimized) ? { display: 'none' } : undefined}>
           <div className="ab-crt" aria-hidden="true" />
 

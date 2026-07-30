@@ -18,6 +18,7 @@ import {
 } from './OSContext';
 import ContactWindow from './ContactWindow';
 import ProjectsWindow from './ProjectsWindow';
+import WindowZoomFX from './WindowZoomFX';
 import {
   PxAppWindows, PxLightbulb, PxLightbulbOff, PxVolume, PxVolumeMute, PxSignal,
 } from './PixelIcons.jsx';
@@ -29,10 +30,13 @@ import {
 function DotRingCursor() {
   const dotRef  = useRef(null);
   const ringRef = useRef(null);
+  /* From OSContext, not matchMedia: these were one-shot reads in a `[]` effect,
+     so turning on "reduce motion" mid-session left the custom cursor running
+     and the native cursor hidden until reload. */
+  const { reducedMotion, vp } = useOS();
 
   useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    if (!window.matchMedia('(pointer: fine)').matches) return;
+    if (reducedMotion || vp.coarse) return;
     document.body.classList.add('cursor-hidden');
 
     let mx = window.innerWidth / 2, my = window.innerHeight / 2;
@@ -83,7 +87,7 @@ function DotRingCursor() {
       document.body.classList.remove('cursor-hidden');
       document.body.classList.remove('cursor-hover');
     };
-  }, []);
+  }, [reducedMotion, vp.coarse]);
 
   return (
     <>
@@ -94,9 +98,10 @@ function DotRingCursor() {
 }
 
 // ── Desktop Icon ──────────────────────────────────────────────────────────────
-function DesktopIcon({ icon, onDblClick }) {
+function DesktopIcon({ icon, onDblClick, index = 0 }) {
   const [sel, setSel] = useState(false);
   const iconRef = useRef(null);
+  const { reducedMotion, vp } = useOS();
 
   const handleClick    = () => { playClick(); setSel(true); setTimeout(() => setSel(false), 380); };
   const handleDblClick = () => {
@@ -113,8 +118,7 @@ function DesktopIcon({ icon, onDblClick }) {
      its label glow lifts. Pure transform on the inner frame → compositor-cheap.
      Only active on fine pointers without reduced-motion. */
   useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    if (!window.matchMedia('(pointer: fine)').matches) return;
+    if (reducedMotion || vp.coarse) return;
     const el = iconRef.current;
     if (!el) return;
     const RADIUS = 90;      // px within which the pull engages
@@ -160,7 +164,7 @@ function DesktopIcon({ icon, onDblClick }) {
       window.removeEventListener('scroll', invalidate);
       if (raf) cancelAnimationFrame(raf);
     };
-  }, []);
+  }, [reducedMotion, vp.coarse]);
 
   const DeskIco = WIN98[icon.id];
   const Inner = (
@@ -173,7 +177,8 @@ function DesktopIcon({ icon, onDblClick }) {
   );
 
   return (
-    <div className="desktop-icon" ref={iconRef} data-iconid={icon.id}>
+    <div className="desktop-icon" ref={iconRef} data-iconid={icon.id}
+         style={{ '--i': index }}>
       <button className="desktop-icon-inner" aria-label={icon.label}
         onClick={handleClick} onDoubleClick={handleDblClick}>
         {Inner}
@@ -1041,6 +1046,7 @@ function Win95Taskbar({ clock, onAction, muted, onToggleMute, wins, onWinAction,
         <div className="tb-tasks">
           {TB_WINS.filter(w => wins?.[w.id]?.open && stage >= w.minStage).map(w => (
             <button key={w.id}
+              data-win-id={w.id}
               className={`tb-task tb-task-in${!wins[w.id].minimized ? ' tb-active' : ''}`}
               onClick={() => { playClick(); onWinAction(w.id, 'toggle'); }}>
               <w.Ico className="tb-task-ico" size={24} /> {w.label}
@@ -1257,6 +1263,7 @@ function ScrollToTop() {
   const btnRef  = useRef(null);
   const arcRef  = useRef(null);
   const stateRef = useRef({ visible: false, full: false });
+  const { reducedMotion } = useOS();
 
   useEffect(() => {
     let raf = null;
@@ -1296,8 +1303,9 @@ function ScrollToTop() {
 
   const onClick = () => {
     playClick();
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+    /* Read at click time, so this was never stale — routed through OSContext
+       for consistency with the one-state-hub rule in PRODUCT.md. */
+    window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
   };
 
   // SVG ring metrics — r=22 → circumference ~138.23
@@ -1365,6 +1373,7 @@ export default function FixedComponents({ children }) {
     <>
       <SiteBackground />
       <DotRingCursor />
+      <WindowZoomFX />
 
       <ContextMenu pos={os.ctxMenu} onAction={os.handleAction} onClose={() => os.setCtxMenu(null)} />
       <AboutDialog open={os.aboutOpen} onClose={() => os.setAboutOpen(false)} />
@@ -1395,8 +1404,8 @@ export default function FixedComponents({ children }) {
       {/* desktop icons — persistent across every section */}
       <div className="fixed-layer">
         <div className="icons-col">
-          {DESKTOP_ICONS.map(icon => (
-            <DesktopIcon key={icon.id} icon={icon}
+          {DESKTOP_ICONS.map((icon, i) => (
+            <DesktopIcon key={icon.id} icon={icon} index={i}
               onDblClick={ic => os.handleAction(ic.dblAction || '')} />
           ))}
         </div>

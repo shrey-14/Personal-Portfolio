@@ -245,6 +245,7 @@ function Win95Window({ title, titleIcon, x, y, z = 10,
   return (
     <div
       ref={setRefs}
+      data-win-id={winId}
       className={`win95-window${active ? ' win-active' : ' win-inactive'}${className ? ' ' + className : ''}`}
       style={{ display: minimized ? 'none' : undefined, ...style }}
       onMouseDown={bringToFront}
@@ -305,10 +306,13 @@ function SpotlightFigure() {
   const baseImgRef   = useRef(null);
   const revealRef    = useRef(null);
   const revealImgRef = useRef(null);
-  const reduced = useMemo(
-    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches, []);
-  const fine = useMemo(
-    () => window.matchMedia('(pointer: fine)').matches, []);
+  /* Both read from OSContext rather than matchMedia. These were useMemo(…, [])
+     one-shots, so toggling "reduce motion" (or docking a mouse) mid-session
+     never reached the tilt/glare loop. OSContext owns both and updates them —
+     and per PRODUCT.md it is the only place that should. */
+  const os = useOS();
+  const reduced = os.reducedMotion;
+  const fine = !os.vp.coarse;
 
   useEffect(() => {
     if (reduced || !fine) return;
@@ -739,10 +743,11 @@ function SelectionRect({ rect }) {
 function MobileReveal({ children, onVisible, delay = 0 }) {
   const ref = useRef(null);
   const [inView, setInView] = useState(false);
+  const { reducedMotion } = useOS();
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (reducedMotion) {
       setInView(true); onVisible?.();
       return;
     }
@@ -755,7 +760,7 @@ function MobileReveal({ children, onVisible, delay = 0 }) {
     }, { threshold: 0.25 });
     io.observe(el);
     return () => io.disconnect();
-  }, [onVisible]);
+  }, [onVisible, reducedMotion]);
   return (
     <div ref={ref} className={`mob-reveal${inView ? ' mob-in' : ''}`}
       style={{ transitionDelay: `${delay}ms` }}>

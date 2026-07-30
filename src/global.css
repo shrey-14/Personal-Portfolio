@@ -100,26 +100,6 @@ body.cursor-hidden * {
 }
 
 /* ── CRT boot keyframes ───────────────────────────────────────────────────── */
-@keyframes crtOverlayFlicker {
-  0%,
-  100% {
-    opacity: 0.4;
-  }
-  50% {
-    opacity: 0.9;
-  }
-}
-.crt-overlay-flicker {
-  animation: crtOverlayFlicker 0.15s infinite;
-}
-@keyframes crtScanlineRoll {
-  from {
-    transform: translateY(-5vh);
-  }
-  to {
-    transform: translateY(105vh);
-  }
-}
 
 /* ══════════════════════════════════════════════════════════════════════════
    SHREY/OS — Windows 95 Desktop
@@ -387,11 +367,25 @@ body.cursor-hidden * {
   flex-direction: column;
   gap: 2px;
   padding-top: 8px;
-  animation: iconsIn 0.5s ease-out 0.25s both;
+  /* Entrance moved to the individual icons so they can stagger — see below.
+     The column itself no longer animates. */
 }
 .desktop-icon {
   display: block;
   width: 76px;
+  /* Icons paint in one after another rather than as one block. Era-accurate:
+     Windows 95 drew desktop icons sequentially on slow hardware, and the
+     cascade reads as the desktop assembling itself rather than cutting in.
+     40ms apart × 5 icons = 160ms of stagger — under the 30–80ms guidance and
+     short enough that the last icon is never perceptibly late.
+     --i is set inline by DesktopIcon; 0.25s base delay matches the old
+     container animation so the desktop still settles at the same moment. */
+  animation: iconsIn 0.34s var(--ease-out) calc(0.25s + var(--i, 0) * 40ms) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Keep the fade, drop the slide and the cascade — arriving late is itself a
+     kind of motion, so everything lands together. */
+  .desktop-icon { animation: chromeFadeIn 0.3s ease-out 0.25s both; }
 }
 .desktop-icon-inner {
   display: flex;
@@ -5230,14 +5224,6 @@ body.cursor-hidden * {
   background: var(--sk-sig-soft);
   padding: 10px 12px;
 }
-.sk-sd2 {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--phosphor);
-  box-shadow: 0 0 6px rgba(57, 255, 20, 0.85);
-  animation: liveDotPulse 1.6s ease-in-out infinite;
-}
 .sk-seek-txt {
   font-family: var(--f-sys);
   font-size: 12px;
@@ -9440,11 +9426,9 @@ body.pj-booting .taskbar {
   font-family: var(--f-sys);
   font-size: 11.5px;
   color: var(--win-text);
-}
-/* Indent on hover via transform, not padding: padding triggers layout, and
-   declaring the transition inside :hover (as this once did) meant hover-OUT
-   snapped back with no animation. Both directions now ease from the base rule. */
-.pw-arch-row {
+  /* Indent on hover via transform, not padding: padding triggers layout, and
+     declaring the transition inside :hover (as this once did) meant hover-OUT
+     snapped back with no animation. Both directions ease from this rule. */
   transition: background var(--dur-2) ease, transform var(--dur-2) var(--ease-out);
 }
 .pw-arch-row:hover {
@@ -9899,22 +9883,23 @@ body.pj-booting .taskbar {
 
   /* ── Motion ──────────────────────────────────────────────────────────────
      One curve, one duration scale. --ease-out is the house curve: a strong
-     ease-out that was already hardcoded ~50× as var(--ease-out)
-     (in two spellings, with and without spaces) before being named here.
-     --ease-window is kept as an alias so existing call sites keep working.
+     ease-out that was hardcoded 50 times over (in two spellings, with and
+     without spaces) before being named here. --ease-window is kept as an alias
+     so existing call sites keep working.
 
      Durations stay deliberately short. Real Windows 95 opened windows
      instantly, so OS chrome reads as authentic only when it is near-instant —
      the generic "modals get 200-500ms" advice is wrong for this product. Spend
-     the motion budget on the CRT boot, dial-up and Pixel Buddy instead. */
+     the motion budget on the CRT boot, dial-up and Pixel Buddy instead.
+
+     Every token here has a consumer. A named token with no call site is worse
+     than a literal: it implies a system that isn't actually in use. */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --ease-window: var(--ease-out);
 
   --dur-1: 80ms;    /* menu/context reveal — chrome should beat the eye      */
   --dur-2: 120ms;   /* hover + press feedback                                */
   --dur-3: 160ms;   /* small state changes (toggles, tabs)                   */
-  --dur-4: 220ms;   /* panels, popovers                                      */
   --dur-hover: 140ms;
 
   --titlebar-font-chrome: 700 11px var(--f-sys);          /* Win95 chrome windows */
@@ -10099,14 +10084,6 @@ body { font-feature-settings: "ss02" 0; }
   letter-spacing: 0.08em; color: rgba(57,255,20,0.85);
   text-shadow: 0 0 6px rgba(57,255,20,0.6);
 }
-.pj-mon-onair {
-  position: absolute; top: 7px; right: 9px; font: 700 11px var(--f-mono);
-  letter-spacing: 0.08em; color: #ff5b45; text-shadow: 0 0 7px rgba(255,91,69,0.7);
-  opacity: 0; transition: opacity 0.2s ease;
-  animation: pjOnAir calc(1.1s * var(--spd, 1)) steps(2, jump-none) infinite;
-}
-.pj-mon-live .pj-mon-onair { opacity: 1; }
-@keyframes pjOnAir { 50% { opacity: 0.35; } }
 .pj-mon-boot {
   position: absolute; left: 50%; bottom: 9px; transform: translate(-50%, 6px);
   font: 700 10px var(--f-mono); letter-spacing: 0.14em;
@@ -10118,12 +10095,6 @@ body { font-feature-settings: "ss02" 0; }
 .pj-mon:hover .pj-mon-boot { opacity: 1; transform: translate(-50%, 0); }
 .pj-mon-live .pj-mon-boot { display: none; }
 .pj-mon-ctrl { display: flex; align-items: center; gap: 7px; padding: 6px 4px 0; }
-.pj-mon-led {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--accent, #e89020); box-shadow: 0 0 6px rgba(232,144,32,0.8);
-  animation: pjLedIdle calc(2.6s * var(--spd, 1)) ease-in-out infinite;
-}
-.pj-mon-led-live { background: var(--phosphor, #39ff14); box-shadow: 0 0 7px rgba(57,255,20,0.9); animation: none; }
 @keyframes pjLedIdle { 50% { opacity: 0.45; } }
 .pj-mon-knob {
   width: 9px; height: 9px; border-radius: 50%;
@@ -12912,4 +12883,88 @@ body.cursor-hover .cursor-ring {
   .start-menu,
   .ctx-menu,
   .theme-popup { animation-name: chromeFadeIn; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   REDUCED MOTION — LOOPING MOVEMENT
+   ---------------------------------------------------------------------------
+   Every `infinite` animation that MOVES something, gathered in one place.
+   Vestibular triggers are cumulative: one bouncing hint is tolerable, five
+   of them plus a radar sweep, a scanning bar and a dashed road is not.
+
+   Scope is deliberately movement-only. The looping OPACITY animations —
+   liveDotPulse, termBlink, skBlink, pjBlink, pjCb — are left running on
+   purpose. Reduced motion means gentler, not zero: a blinking terminal cursor
+   is a text affordance, and killing it would read as a broken prompt.
+
+   .pj-mon and .pj-app already have their own `* { animation: none }` blocks.
+   The .pj-feed illustrations below are siblings of those, not descendants, so
+   they were never covered — hence this block.
+═══════════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  /* hintBounce — translateY(6px) loop, at six separate call sites: the scroll
+     hint plus one "next section" arrow per section. */
+  .scroll-hint,
+  .sk-next-arw,
+  .ab-next-arw,
+  .pj-next-arw,
+  .jn-next-arw,
+  .at-next-arw,
+  /* mobHintPulse — the mobile equivalent */
+  .mob-hint { animation: none; }
+  /* NOT gated: `.s2t-visible .s2t-arc` (s2tArcBreathe) is opacity 0.9<->0.62
+     with no transform. It belongs with the blinks, not here. */
+
+  /* Contact-form spinner: rotation carries the "working" signal, so replace it
+     rather than remove it — a frozen spinner reads as a hung form. The ring is
+     also evened out, because a stopped ring with one dark segment looks stalled
+     rather than intentionally still. */
+  .mail-spinner {
+    animation: liveDotPulse 1.6s ease-in-out infinite;
+    border-top-color: rgba(26, 18, 0, 0.3);
+  }
+
+  /* .pj-feed project illustrations — radar sweep, document scan, road dashes,
+     equaliser bars. All pure decoration behind the project cards. */
+  .pj-fr-sweep,
+  .pj-fr-blip,
+  .pj-fd-scan,
+  .pj-fd-clause,
+  .pj-fv-dash,
+  .pj-fv-box i,
+  .pj-ff-bar { animation: none; }
+  /* No height pin needed: .pj-ff-bar already sizes from `height: var(--h)` and
+     pjBar only drives scaleY/opacity, so stopping it leaves the bars standing
+     at their real heights rather than collapsing. */
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   WINDOW ZOOM WIREFRAME (minimise / restore)
+   ---------------------------------------------------------------------------
+   The hollow rectangle that flies between a window and its taskbar button.
+   Windows 95 drew this with a 1px XOR-inverted dotted outline; `mix-blend-mode:
+   difference` on a white border is the closest honest equivalent and reads
+   correctly over both the light and dark desktops without theming.
+
+   Sized and animated entirely from WindowZoomFX via WAAPI, so there is no
+   transition here — only the resting appearance.
+═══════════════════════════════════════════════════════════════════════════ */
+.win-zoom-ghost {
+  position: fixed;
+  left: 0;
+  top: 0;
+  display: none;
+  z-index: 9998;              /* above windows + taskbar, below BSOD/screensaver */
+  pointer-events: none;
+  border: 2px dotted #fff;
+  mix-blend-mode: difference;
+  transform-origin: 0 0;      /* required: WAAPI scales rect-to-rect from top-left */
+  will-change: transform, opacity;
+  contain: strict;            /* the ghost never affects layout or paint elsewhere */
+}
+
+/* Reduced motion never reaches this — OSContext returns early before setting
+   zoomFx — but belt and braces in case the payload is ever set another way. */
+@media (prefers-reduced-motion: reduce) {
+  .win-zoom-ghost { display: none !important; }
 }

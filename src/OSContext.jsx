@@ -232,6 +232,11 @@ export function OSProvider({ children }) {
   const [ssActive,    setSsActive]    = useState(false);
   const [stage,       setStage]       = useState(reducedMotion ? 3 : 0);
   const [focusedWin,  setFocusedWin]  = useState(null);
+  /* Wireframe zoom between a window and its taskbar button — the one animation
+     Windows 95 actually had on minimise/restore. Payload is consumed once by
+     WindowZoomFX; `key` makes repeat minimises of the same window re-fire. */
+  const [zoomFx,      setZoomFx]      = useState(null);
+  const zoomSeq = useRef(0);
   const [wins,        setWins]        = useState({
     paint:    { open: true, minimized: false },
     notepad:  { open: true, minimized: false },
@@ -276,7 +281,45 @@ export function OSProvider({ children }) {
   const lastActivityR = useRef(Date.now());
 
   // Window state manager
+  /* Fire the wireframe zoom for a minimise or restore.
+     Direction is read from the DOM rather than from `wins`: a minimised window
+     is display:none, so a zero-width rect IS the "currently hidden" signal.
+     That avoids mirroring window state into a ref just to know which way to go.
+
+     On minimise the window is still laid out, so both rects are measured now.
+     On restore it is still hidden and has no rect — WindowZoomFX measures the
+     window itself on the next frame, once React has revealed it. */
+  const playWindowZoom = useCallback((id, action) => {
+    if (reducedMotion) return;
+    /* :not(.tb-task) is load-bearing — the taskbar button carries the SAME
+       data-win-id, and querySelector returns whichever comes first in the DOM.
+       Without it the "window" rect resolved to the button, so the ghost morphed
+       the button onto itself and nothing appeared to move. */
+    const winEl = document.querySelector(`[data-win-id="${id}"]:not(.tb-task)`);
+    const btnEl = document.querySelector(`.tb-task[data-win-id="${id}"]`);
+    if (!winEl || !btnEl) return;               // taskbar button not shown yet
+    const b = btnEl.getBoundingClientRect();
+    if (!b.width) return;
+    const w = winEl.getBoundingClientRect();
+    const visible = w.width > 0 && w.height > 0;
+
+    let dir;
+    if (action === 'minimize') dir = visible ? 'out' : null;
+    else if (action === 'toggle') dir = visible ? 'out' : 'in';
+    else return;
+    if (!dir) return;
+
+    const r = n => ({ x: n.left, y: n.top, w: n.width, h: n.height });
+    setZoomFx({
+      key: ++zoomSeq.current,
+      id, dir,
+      btn: r(b),
+      win: dir === 'out' ? r(w) : null,         // null ⇒ measure after reveal
+    });
+  }, [reducedMotion]);
+
   const wAction = useCallback((id, action) => {
+    playWindowZoom(id, action);
     setWins(prev => {
       const w = prev[id];
       if (!w) return prev;
@@ -286,7 +329,7 @@ export function OSProvider({ children }) {
       if (action === 'toggle')   return { ...prev, [id]: { ...w, minimized: !w.minimized, open: true } };
       return prev;
     });
-  }, []);
+  }, [playWindowZoom]);
 
   // Clock
   useEffect(() => {
@@ -406,11 +449,13 @@ export function OSProvider({ children }) {
     displayOpen, setDisplayOpen, recycleOpen, setRecycleOpen,
     shutdownOpen, setShutdownOpen,
     wins, wAction, focusedWin, setFocusedWin, stage, setStage,
+    zoomFx,
     handleAction, cvHref,
   }), [
     vp, isMobile, reducedMotion, theme, wallpaperId, clock, muted,
     ctxMenu, aboutOpen, dialupOpen, dialupPhase, contactOpen, bsodOpen,
     ssActive, displayOpen, recycleOpen, shutdownOpen, wins, focusedWin, stage,
+    zoomFx,
     toggleTheme, applyDisplay, toggleMute, wAction, handleAction, gotoSection,
   ]);
 

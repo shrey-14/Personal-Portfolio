@@ -330,7 +330,7 @@ export default function ProjectsWindow() {
   if (!winState.open || winState.minimized) return null;
 
   return (
-    <div className="pw-window" ref={winRef}>
+    <div className="pw-window" ref={winRef} data-win-id="explorer">
       {/* titlebar */}
       <div className="pw-titlebar draggable-titlebar" onPointerDown={onTitlebarDown}>
         <span className="pw-title-ico"><OsHardDisk size={16} className="title-ico-img" /></span>
