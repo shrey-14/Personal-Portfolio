@@ -1617,7 +1617,11 @@ body.cursor-hidden * {
   z-index: 900;
   padding: 2px 0;
   box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
-  animation: ctxIn 0.08s ease-out;
+  /* Origin is the cursor position, passed as px from ContextMenu. Falls back to
+     the top-left corner rather than `center` — a menu that grows out of its own
+     middle reads as detached from the click that spawned it. */
+  transform-origin: var(--ctx-ox, 0) var(--ctx-oy, 0);
+  animation: ctxIn var(--dur-1) var(--ease-out);
 }
 @keyframes ctxIn {
   from {
@@ -1801,6 +1805,7 @@ body.cursor-hidden * {
 }
 .dialup-fill {
   height: 100%;
+  width: 100%;
   background: repeating-linear-gradient(
     to right,
     #000080 0px,
@@ -1808,7 +1813,11 @@ body.cursor-hidden * {
     transparent 6px,
     transparent 8px
   );
-  transition: width 0.1s linear;
+  /* Revealed with clip-path rather than an animated width: the bar ticks up
+     every baud step, and width relayouts the modem dialog each time. clip-path
+     also keeps the 6px/2px segments at a fixed pitch — scaleX would stretch
+     them as the bar fills. */
+  transition: clip-path 0.1s linear;
 }
 .dialup-hint {
   font-family: var(--f-sys);
@@ -1835,7 +1844,8 @@ body.cursor-hidden * {
   z-index: 700;
   display: flex;
   box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
-  animation: menuIn 0.1s ease-out;
+  transform-origin: bottom left;   /* rises out of the Start button */
+  animation: menuIn var(--dur-1) var(--ease-out);
 }
 @keyframes menuIn {
   from {
@@ -1847,6 +1857,10 @@ body.cursor-hidden * {
     transform: none;
   }
 }
+
+/* Reduced-motion fallback for the chrome menus lives at the END of this file:
+   `.theme-popup` declares the `animation` SHORTHAND further down, which would
+   reset any animation-name set here. See "CHROME MENU REDUCED MOTION". */
 .start-strip {
   width: 22px;
   flex-shrink: 0;
@@ -1974,7 +1988,7 @@ body.cursor-hidden * {
 }
 /* Taskbar buttons pop in as their window "opens" during the reveal. */
 .tb-task-in {
-  animation: tbTaskIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: tbTaskIn 0.28s var(--ease-out) both;
 }
 @keyframes tbTaskIn {
   from {
@@ -2327,7 +2341,7 @@ body.cursor-hidden * {
   transform: translateY(30px);
   transition:
     opacity 0.6s ease-out,
-    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    transform 0.6s var(--ease-out);
   will-change: transform, opacity;
 }
 .mob-reveal.mob-in {
@@ -2562,6 +2576,15 @@ body.cursor-hidden * {
   padding: 6px;
   font-family: var(--f-sys);
   font-size: 12px;
+  /* The tray popup used to just appear while .ctx-menu and .start-menu both
+     animated in — the odd one out in the same shell. Anchored bottom-right
+     because it hangs off the tray button above the taskbar. */
+  transform-origin: bottom right;
+  animation: trayPopIn var(--dur-1) var(--ease-out);
+}
+@keyframes trayPopIn {
+  from { opacity: 0; transform: scale(0.96) translateY(3px); }
+  to   { opacity: 1; transform: none; }
 }
 .theme-popup-row {
   display: flex;
@@ -2840,10 +2863,12 @@ body.cursor-hidden * {
   border-radius: 50%;
   background: #fff;
   box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
-  transition: left 0.15s;
+  /* translateX, not left: the knob rides the compositor instead of relaying out
+     the switch on every frame of the toggle. */
+  transition: transform var(--dur-3) var(--ease-out);
 }
 .dp-switch-on .dp-switch-knob {
-  left: 23px;
+  transform: translateX(22px);
 }
 
 /* Wallpaper list */
@@ -3438,7 +3463,7 @@ body.cursor-hidden * {
   /* Previously had a genuine spring/overshoot curve here — the one
      animation in the codebase not using the site's own confident ease-out
      (--ease-window). Same duration, natural deceleration now instead. */
-  animation: mailPop 0.35s var(--ease-window, cubic-bezier(0.16, 1, 0.3, 1)) both;
+  animation: mailPop 0.35s var(--ease-window, var(--ease-out)) both;
 }
 @keyframes mailPop {
   from {
@@ -3646,7 +3671,7 @@ body.cursor-hidden * {
   display: flex;
   flex-direction: column;
   padding-top: env(safe-area-inset-top, 0px);
-  animation: drawerIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: drawerIn 0.22s var(--ease-out);
   overflow-y: auto;
 }
 @keyframes drawerIn {
@@ -4786,7 +4811,7 @@ body.cursor-hidden * {
    every other panel-content change in the OS (state-change tier, not a
    focal moment: short duration, no stagger). */
 .sk-tab-panel {
-  animation: skTabIn 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: skTabIn 0.26s var(--ease-out) both;
 }
 @keyframes skTabIn {
   0% { opacity: 0; transform: translateY(6px); }
@@ -5282,21 +5307,21 @@ body.cursor-hidden * {
   transform: none;
   transition:
     opacity 0.5s ease 0.05s,
-    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.05s;
+    transform 0.6s var(--ease-out) 0.05s;
 }
 .sk-in .sk-win {
   opacity: 1;
   transform: none;
   transition:
     opacity 0.6s ease 0.12s,
-    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.12s;
+    transform 0.7s var(--ease-out) 0.12s;
 }
 .sk-in .sk-next {
   opacity: 1;
   transform: none;
   transition:
     opacity 0.5s ease 0.3s,
-    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s;
+    transform 0.6s var(--ease-out) 0.3s;
 }
 @media (prefers-reduced-motion: reduce) {
   .sk-break,
@@ -6021,7 +6046,7 @@ body {
   inset: 0;
   display: flex;
   flex-direction: column;
-  animation: abFade 0.82s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: abFade 0.82s var(--ease-out) both;
 }
 @keyframes abFade {
   0% {
@@ -6041,10 +6066,10 @@ body {
 }
 /* header strip and body arrive a beat after the panel itself */
 .ab-page .ab-page-head {
-  animation: abRise 0.62s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+  animation: abRise 0.62s var(--ease-out) 0.1s both;
 }
 .ab-page .ab-scroll {
-  animation: abRise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.18s both;
+  animation: abRise 0.7s var(--ease-out) 0.18s both;
 }
 @keyframes abRise {
   0% {
@@ -6401,21 +6426,21 @@ body {
   transform: none;
   transition:
     opacity 0.5s ease 0.05s,
-    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.05s;
+    transform 0.6s var(--ease-out) 0.05s;
 }
 .ab-in .ab-win {
   opacity: 1;
   transform: none;
   transition:
     opacity 0.6s ease 0.12s,
-    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.12s;
+    transform 0.7s var(--ease-out) 0.12s;
 }
 .ab-in .ab-next {
   opacity: 1;
   transform: none;
   transition:
     opacity 0.5s ease 0.3s,
-    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s;
+    transform 0.6s var(--ease-out) 0.3s;
 }
 
 /* ══════════════ RESPONSIVE ══════════════ */
@@ -7232,7 +7257,7 @@ body.pj-booting .taskbar {
     1px 1px 0 rgba(0, 0, 0, 0.55),
     5px 7px 0 rgba(0, 0, 0, 0.18),
     18px 26px 46px rgba(0, 0, 0, 0.5);
-  animation: pjTermIn 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: pjTermIn 0.26s var(--ease-out) both;
 }
 [data-theme="dark"] .pj-term {
   background: var(--win-face);
@@ -7460,7 +7485,7 @@ body.pj-booting .taskbar {
     5px 7px 0 rgba(0, 0, 0, 0.18),
     18px 26px 46px rgba(0, 0, 0, 0.34);
   transform-origin: var(--pj-ox, 14%) 0;
-  animation: pjGrow 0.44s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: pjGrow 0.44s var(--ease-out) both;
 }
 [data-theme="dark"] .pj-win {
   background: var(--win-face);
@@ -7631,7 +7656,7 @@ body.pj-booting .taskbar {
   inset: 0;
   display: flex;
   flex-direction: column;
-  animation: pjFade 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: pjFade 0.42s var(--ease-out) both;
 }
 @keyframes pjFade {
   0% {
@@ -7682,7 +7707,7 @@ body.pj-booting .taskbar {
 /* mobile tab switch — was an instant swap; same recipe as .pw-tab-body /
    .sk-tab-panel (state-change tier, no stagger) */
 .pj-tab-panel {
-  animation: pjTabIn 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: pjTabIn 0.26s var(--ease-out) both;
 }
 @keyframes pjTabIn {
   0% { opacity: 0; transform: translateY(6px); }
@@ -7883,21 +7908,21 @@ body.pj-booting .taskbar {
   transform: none;
   transition:
     opacity 0.5s ease 0.05s,
-    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.05s;
+    transform 0.6s var(--ease-out) 0.05s;
 }
 .pj-in .pj-caddy {
   opacity: 1;
   transform: none;
   transition:
     opacity 0.6s ease 0.12s,
-    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.12s;
+    transform 0.7s var(--ease-out) 0.12s;
 }
 .pj-in .pj-next {
   opacity: 1;
   transform: none;
   transition:
     opacity 0.5s ease 0.3s,
-    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s;
+    transform 0.6s var(--ease-out) 0.3s;
 }
 
 /* ══════════ RESPONSIVE ══════════ */
@@ -8509,7 +8534,7 @@ body.pj-booting .taskbar {
 
 /* rows stagger in as the card takes focus */
 .jn-card-live .jn-c-row {
-  animation: jnRowIn 0.52s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: jnRowIn 0.52s var(--ease-out) both;
 }
 .jn-card-live .jn-c-row:nth-child(1) {
   animation-delay: 0.1s;
@@ -8539,7 +8564,7 @@ body.pj-booting .taskbar {
    so the "provably synced" claim is a felt beat, not just a mechanical fact. */
 .jn-c-loss-num {
   display: inline-block;
-  animation: jnLossPulse 0.6s var(--ease-window, cubic-bezier(0.16, 1, 0.3, 1)) both;
+  animation: jnLossPulse 0.6s var(--ease-window, var(--ease-out)) both;
 }
 @keyframes jnLossPulse {
   0% {
@@ -8733,21 +8758,21 @@ body.pj-booting .taskbar {
   transform: none;
   transition:
     opacity 0.5s ease 0.05s,
-    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.05s;
+    transform 0.6s var(--ease-out) 0.05s;
 }
 .jn-in .jn-win {
   opacity: 1;
   transform: none;
   transition:
     opacity 0.6s ease 0.12s,
-    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.12s;
+    transform 0.7s var(--ease-out) 0.12s;
 }
 .jn-in .jn-next {
   opacity: 1;
   transform: none;
   transition:
     opacity 0.5s ease 0.3s,
-    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s;
+    transform 0.6s var(--ease-out) 0.3s;
 }
 
 /* ══════════ RESPONSIVE ══════════ */
@@ -8935,7 +8960,7 @@ body.pj-booting .taskbar {
     14px 20px 60px rgba(0, 0, 0, 0.55);
   display: flex;
   flex-direction: column;
-  animation: pwOpen 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: pwOpen 0.2s var(--ease-out) both;
 }
 @keyframes pwOpen {
   from {
@@ -9197,7 +9222,7 @@ body.pj-booting .taskbar {
 /* tab body */
 .pw-tab-body {
   padding: 14px 16px 18px;
-  animation: pwTabIn 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: pwTabIn 0.26s var(--ease-out) both;
 }
 @keyframes pwTabIn {
   0% { opacity: 0; transform: translateY(6px); }
@@ -9416,10 +9441,15 @@ body.pj-booting .taskbar {
   font-size: 11.5px;
   color: var(--win-text);
 }
+/* Indent on hover via transform, not padding: padding triggers layout, and
+   declaring the transition inside :hover (as this once did) meant hover-OUT
+   snapped back with no animation. Both directions now ease from the base rule. */
+.pw-arch-row {
+  transition: background var(--dur-2) ease, transform var(--dur-2) var(--ease-out);
+}
 .pw-arch-row:hover {
   background: var(--pj-sig-soft);
-  padding-left: 8px;
-  transition: padding 0.12s;
+  transform: translateX(8px);
 }
 .pw-arch-k {
   font-family: var(--f-mono);
@@ -9866,8 +9896,27 @@ body.pj-booting .taskbar {
 :root {
   --taskbar-h: 32px;
   --titlebar-h: 22px;
-  --ease-window: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ── Motion ──────────────────────────────────────────────────────────────
+     One curve, one duration scale. --ease-out is the house curve: a strong
+     ease-out that was already hardcoded ~50× as var(--ease-out)
+     (in two spellings, with and without spaces) before being named here.
+     --ease-window is kept as an alias so existing call sites keep working.
+
+     Durations stay deliberately short. Real Windows 95 opened windows
+     instantly, so OS chrome reads as authentic only when it is near-instant —
+     the generic "modals get 200-500ms" advice is wrong for this product. Spend
+     the motion budget on the CRT boot, dial-up and Pixel Buddy instead. */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-window: var(--ease-out);
+
+  --dur-1: 80ms;    /* menu/context reveal — chrome should beat the eye      */
+  --dur-2: 120ms;   /* hover + press feedback                                */
+  --dur-3: 160ms;   /* small state changes (toggles, tabs)                   */
+  --dur-4: 220ms;   /* panels, popovers                                      */
   --dur-hover: 140ms;
+
   --titlebar-font-chrome: 700 11px var(--f-sys);          /* Win95 chrome windows */
   --titlebar-font-app: 700 10.5px var(--f-sys); /* miniature tile titlebars */
 }
@@ -10237,7 +10286,10 @@ body { font-feature-settings: "ss02" 0; }
   -webkit-mask: repeating-linear-gradient(90deg, #000 0 4px, transparent 4px 6px);
   mask: repeating-linear-gradient(90deg, #000 0 4px, transparent 4px 6px);
   box-shadow: 0 0 6px rgba(232,144,32,0.5);
-  transition: width 0.4s ease;
+  /* No width transition: cpu values are static literals in SKILLS, so the inline
+     width is set once at mount and never changes — the transition could never
+     fire. (If these ever animate, use clip-path: inset() rather than width or
+     scaleX: both would distort the LED-segment mask and the gradient.) */
 }
 .sk-row { transition: background 0.08s linear; }
 .sk-row:hover { background: rgba(0, 0, 128, 0.08); }
@@ -10730,7 +10782,7 @@ body { font-feature-settings: "ss02" 0; }
   display: flex;
   flex-direction: column;
   gap: 3px;
-  animation: atMsgIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: atMsgIn 0.24s var(--ease-out) both;
 }
 @keyframes atMsgIn {
   0% { opacity: 0; transform: translateY(5px); }
@@ -10895,15 +10947,15 @@ body { font-feature-settings: "ss02" 0; }
 }
 .at-in .at-break {
   opacity: 1; transform: none;
-  transition: opacity 0.5s ease 0.05s, transform 0.6s cubic-bezier(0.16,1,0.3,1) 0.05s;
+  transition: opacity 0.5s ease 0.05s, transform 0.6s var(--ease-out) 0.05s;
 }
 .at-in .at-win {
   opacity: 1; transform: none;
-  transition: opacity 0.6s ease 0.12s, transform 0.7s cubic-bezier(0.16,1,0.3,1) 0.12s;
+  transition: opacity 0.6s ease 0.12s, transform 0.7s var(--ease-out) 0.12s;
 }
 .at-in .at-next {
   opacity: 1; transform: none;
-  transition: opacity 0.5s ease 0.3s, transform 0.6s cubic-bezier(0.16,1,0.3,1) 0.3s;
+  transition: opacity 0.5s ease 0.3s, transform 0.6s var(--ease-out) 0.3s;
 }
 
 /* blur during boot — match pj-booting targets */
@@ -11301,11 +11353,11 @@ body.pj-booting .at-section { filter: blur(3.5px) saturate(.72) brightness(.82);
 }
 .ct-in .ct-break {
   opacity: 1; transform: none;
-  transition: opacity 0.5s ease 0.05s, transform 0.6s cubic-bezier(0.16,1,0.3,1) 0.05s;
+  transition: opacity 0.5s ease 0.05s, transform 0.6s var(--ease-out) 0.05s;
 }
 .ct-in .ct-win {
   opacity: 1; transform: none;
-  transition: opacity 0.6s ease 0.12s, transform 0.7s cubic-bezier(0.16,1,0.3,1) 0.12s;
+  transition: opacity 0.6s ease 0.12s, transform 0.7s var(--ease-out) 0.12s;
 }
 
 /* blur during pj-booting */
@@ -11593,7 +11645,7 @@ body.pj-booting .ct-section { filter: blur(3.5px) saturate(.72) brightness(.82);
   border-bottom-color: var(--chrome-dk);
   outline: 1px solid #000;
   box-shadow: 4px 4px 0 rgba(0,0,0,0.6), 14px 20px 60px rgba(0,0,0,0.55);
-  animation: pwOpen 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: pwOpen 0.2s var(--ease-out) both;
 }
 [data-theme="dark"] .syswin { background: var(--win-face); }
 .syswin-bin { width: min(96vw, 880px); }
@@ -11785,7 +11837,7 @@ body.pj-booting .ct-section { filter: blur(3.5px) saturate(.72) brightness(.82);
   margin: 0; padding-left: 20px;
   font-family: var(--f-body); font-size: 13px; line-height: 1.65;
   color: var(--field-text);
-  animation: binWhyIn 0.42s var(--ease-window, cubic-bezier(0.16, 1, 0.3, 1)) both;
+  animation: binWhyIn 0.42s var(--ease-window, var(--ease-out)) both;
 }
 .bin-d-why::before {
   content: "\201C";
@@ -11915,7 +11967,7 @@ body.pj-booting .ct-section { filter: blur(3.5px) saturate(.72) brightness(.82);
    PERSISTED on the flex-centred dialog — shifting it left by half its width
    and up by half its height (the exact cut-off in the screenshots).
    The dialogs get their own translate-free keyframes: */
-.syswin { animation: syswinOpen 0.2s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.syswin { animation: syswinOpen 0.2s var(--ease-out) both; }
 @keyframes syswinOpen {
   from { opacity: 0; transform: scale(0.96); }
   to   { opacity: 1; transform: scale(1); }
@@ -12063,14 +12115,14 @@ body.pj-booting .ct-section { filter: blur(3.5px) saturate(.72) brightness(.82);
 .cursor-dot {
   /* NO transition on transform — that would ease every mousemove and make
      the cursor feel sluggish. Only width/height/background animate. */
-  transition: width 0.18s cubic-bezier(0.16, 1, 0.3, 1),
-              height 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+  transition: width 0.18s var(--ease-out),
+              height 0.18s var(--ease-out),
               background 0.18s ease,
               border-radius 0.18s ease;
 }
 .cursor-ring {
-  transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-              height 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+  transition: width 0.22s var(--ease-out),
+              height 0.22s var(--ease-out),
               border-color 0.22s ease,
               opacity 0.22s ease;
 }
@@ -12162,8 +12214,8 @@ body.cursor-hover .cursor-ring {
   transform: translateY(14px) scale(0.85);
   pointer-events: none;
   transition:
-    opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity 0.32s var(--ease-out),
+    transform 0.32s var(--ease-out);
   filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.35));
 }
 .s2t-visible {
@@ -12210,7 +12262,7 @@ body.cursor-hover .cursor-ring {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
     inset 0 -1px 0 rgba(0, 0, 0, 0.5);
-  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.18s var(--ease-out);
 }
 
 /* arrow + TOP label stack, centred on top of the disc */
@@ -12221,7 +12273,7 @@ body.cursor-hover .cursor-ring {
   align-items: center;
   justify-content: center;
   color: var(--accent, #e89020);
-  transition: color 0.28s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: color 0.28s ease, transform 0.22s var(--ease-out);
   transform: translateY(-3px);
 }
 .s2t-full .s2t-arrow { color: var(--phosphor, #39ff14); }
@@ -12300,7 +12352,7 @@ body.cursor-hover .cursor-ring {
   flex-direction: column;
   align-items: flex-end;
   gap: 6px;
-  animation: buddyIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: buddyIn 0.6s var(--ease-out) both;
 }
 @keyframes buddyIn {
   from { opacity: 0; transform: translateY(20px); }
@@ -12378,7 +12430,7 @@ body.cursor-hover .cursor-ring {
   line-height: 1;
   opacity: 0;
   transform: scale(0.6);
-  transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.18s ease, transform 0.18s var(--ease-out);
 }
 .buddy-root:hover .buddy-close {
   opacity: 1;
@@ -12408,7 +12460,7 @@ body.cursor-hover .cursor-ring {
   font: 500 11.5px "IBM Plex Sans", "Chakra Petch", sans-serif;
   line-height: 1.35;
   letter-spacing: 0.02em;
-  animation: bubbleIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: bubbleIn 0.28s var(--ease-out) both;
   white-space: normal;
 }
 [data-theme="dark"] .buddy-bubble {
@@ -12789,3 +12841,75 @@ body.cursor-hover .cursor-ring {
 
 /* Hint element removed from JSX; kill any residual layout that referenced it */
 .s2t-hint { display: none !important; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COARSE-POINTER HOVER RESET
+   ---------------------------------------------------------------------------
+   Touch devices synthesise :hover on tap and LATCH it until the next tap
+   elsewhere, so every hover-lift stayed stuck in its raised state after being
+   touched, and every reveal-on-hover affordance was unreachable until tapped
+   blind once.
+
+   The file already fought this with viewport proxies — `.pj-disk:hover` is
+   flattened under max-width:560px, `.pj-mon-boot`/`.pj-app-cta` are force-
+   revealed under max-width:900px. Width is not touch, though: an iPad in
+   landscape is 1024px+ and still has no pointer. This generalises the same
+   intent to the actual capability.
+
+   Written as a reset rather than by wrapping each source rule in
+   `@media (hover: hover) and (pointer: fine)`: the movement rules are spread
+   across ~13 sites, several already nested inside other media queries, and
+   re-indenting them all would churn far more of the file than it is worth.
+   Same end state, one reviewable block. Last in the file, so equal-specificity
+   rules lose to it.
+
+   Only MOVEMENT hovers are reset. The ~96 colour/background hovers are left
+   alone on purpose: a latched highlight reads as a Win95 selection, which is
+   era-correct rather than broken.
+═══════════════════════════════════════════════════════════════════════════ */
+@media (hover: none) {
+  /* Lift-on-hover — all of these have no base transform, so `none` is the
+     resting state, not an override that loses positioning. */
+  .pj-disk:hover,
+  .pj-mon:hover,
+  .pj-app:hover,
+  .sd-btn:hover,
+  .sec-relaunch:hover,
+  .pw-arch-row:hover,
+  .s2t:hover::before { transform: none; }
+
+  /* .s2t-arrow rests at translateY(0), not none — keep it explicit. */
+  .s2t:hover .s2t-arrow { transform: translateY(0); }
+
+  /* Reveal-on-hover affordances. These carry translate(-50%) centring, so they
+     are reset to their REVEALED value, never to `none` — `none` would drop the
+     centring and shove them off-axis. Matches the existing max-width:900px
+     fallbacks exactly. */
+  .pj-mon-boot,
+  .pj-app-cta { opacity: 1; transform: translate(-50%, 0); }
+
+  /* Pixel Buddy's close button is opacity:0/scale(0.6) until the parent is
+     hovered — on touch that left no way to dismiss the companion at all. */
+  .buddy-close { opacity: 1; transform: scale(1); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CHROME MENU REDUCED MOTION
+   ---------------------------------------------------------------------------
+   Keep the fade — it still explains that something appeared — but drop the
+   scale/translate. Reduced motion means gentler, not zero.
+
+   Must sit at the end of the file: .start-menu, .ctx-menu and .theme-popup
+   each declare the `animation` SHORTHAND, which resets animation-name. An
+   override placed next to any one of them loses to the shorthands declared
+   after it.
+═══════════════════════════════════════════════════════════════════════════ */
+@keyframes chromeFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .start-menu,
+  .ctx-menu,
+  .theme-popup { animation-name: chromeFadeIn; }
+}

@@ -26,6 +26,7 @@
      project, exactly like sysmonitor and about.
    ═════════════════════════════════════════════════════════════════════════ */
 import { useState, useRef, useEffect, useCallback } from 'react';
+import useWindowDrag from './useWindowDrag';
 import { createPortal } from 'react-dom';
 import { useOS, playClick, playWindowOpen } from './OSContext';
 
@@ -350,33 +351,8 @@ function ProjectWindow({ p, originPct, onEject, winCtl, state }) {
   const os = useOS();
   const [tab, setTab] = useState(0);
   const winRef = useRef(null);
-  const dragRef = useRef({ tx: 0, ty: 0 });
+  const onTitlebarDown = useWindowDrag(winRef, { enabled: !!winCtl });
 
-  /* drag — clamp math mirrors SkillsSection.onTitlebarDown exactly */
-  const onTitlebarDown = useCallback(e => {
-    if (!winCtl || (e.target.closest && e.target.closest('.win-btn'))) return;
-    const el = winRef.current; if (!el) return;
-    const st = dragRef.current;
-    const rect = el.getBoundingClientRect();
-    const homeLeft = rect.left - st.tx, homeTop = rect.top - st.ty, w = rect.width;
-    const sx = e.clientX, sy = e.clientY, tx0 = st.tx, ty0 = st.ty;
-    const onMove = ev => {
-      let dtx = tx0 + (ev.clientX - sx), dty = ty0 + (ev.clientY - sy);
-      dtx = Math.max(-(w - 80) - homeLeft, Math.min((window.innerWidth - 80) - homeLeft, dtx));
-      dty = Math.max(-homeTop, Math.min((window.innerHeight - 54) - homeTop, dty));
-      dragRef.current = { tx: dtx, ty: dty };
-      el.style.transform = `translate(${dtx}px, ${dty}px)`;
-    };
-    const onUp = () => {
-      document.removeEventListener('pointermove', onMove);
-      document.removeEventListener('pointerup', onUp);
-      document.removeEventListener('pointercancel', onUp);
-    };
-    document.addEventListener('pointermove', onMove);
-    document.addEventListener('pointerup', onUp);
-    document.addEventListener('pointercancel', onUp);
-    e.preventDefault();
-  }, [winCtl]);
 
   if (winCtl && (!state.open || state.minimized)) return null;
 

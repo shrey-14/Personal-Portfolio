@@ -181,32 +181,62 @@ function Win95Window({ title, titleIcon, x, y, z = 10,
     ref.current.style.zIndex = topZ;
   }, [winId, onFocus]);
 
+  /* Drag state. Deliberately drives left/top rather than transform: the scroll
+     choreography in applyProgress owns this element's `transform` and rewrites
+     it every frame, so a transform-based drag would be wiped on the next
+     scroll. left/top is a separate channel, so a dragged window stays put. */
+  const drag = useRef({ pointerId: null, raf: 0, nx: 0, ny: 0 });
+
+  useEffect(() => () => { if (drag.current.raf) cancelAnimationFrame(drag.current.raf); }, []);
+
   const onTitlebarPointerDown = useCallback(e => {
     if (e.target.closest?.('.win-btn')) return;
     if (winId) onFocus?.(winId);
     if (!ref.current) return;
+    const d = drag.current;
+    // Multi-touch protection: once a pointer owns the drag, ignore later ones.
+    // Without this, a second finger snaps the window to its position.
+    if (d.pointerId !== null) return;
+
+    const el  = ref.current;
+    const bar = e.currentTarget;          // captured now — currentTarget is null once async
     topZ++;
-    ref.current.style.zIndex = topZ;
-    const rect = ref.current.getBoundingClientRect();
+    el.style.zIndex = topZ;
+    const rect = el.getBoundingClientRect();
     const ox = e.clientX - rect.left;
     const oy = e.clientY - rect.top;
     const w  = rect.width;
+
+    d.pointerId = e.pointerId;
+    try { bar.setPointerCapture(e.pointerId); } catch { /* capture unsupported */ }
+
+    const flush = () => {
+      d.raf = 0;
+      el.style.left = d.nx + 'px';
+      el.style.top  = d.ny + 'px';
+    };
     const onMove = ev => {
+      if (ev.pointerId !== d.pointerId) return;
       // Clamp so the titlebar can never leave the viewport — windows can't be lost.
-      const nx = Math.max(-w + 60, Math.min(window.innerWidth - 60, ev.clientX - ox));
+      d.nx = Math.max(-w + 60, Math.min(window.innerWidth - 60, ev.clientX - ox));
       // 54 = taskbar (32) + titlebar (22): the bar can never swallow a window.
-      const ny = Math.max(0, Math.min(window.innerHeight - 54, ev.clientY - oy));
-      ref.current.style.left = nx + 'px';
-      ref.current.style.top  = ny + 'px';
+      d.ny = Math.max(0, Math.min(window.innerHeight - 54, ev.clientY - oy));
+      // Coalesce to one write per frame: pointermove outpaces the display on
+      // 120Hz+ input, and every left/top write costs a layout pass.
+      if (!d.raf) d.raf = requestAnimationFrame(flush);
     };
-    const onUp = () => {
-      document.removeEventListener('pointermove', onMove);
-      document.removeEventListener('pointerup', onUp);
-      document.removeEventListener('pointercancel', onUp);
+    const onUp = ev => {
+      if (ev.pointerId !== d.pointerId) return;
+      if (d.raf) { cancelAnimationFrame(d.raf); flush(); }
+      d.pointerId = null;
+      try { bar.releasePointerCapture(ev.pointerId); } catch { /* already released */ }
+      bar.removeEventListener('pointermove', onMove);
+      bar.removeEventListener('pointerup', onUp);
+      bar.removeEventListener('pointercancel', onUp);
     };
-    document.addEventListener('pointermove', onMove);
-    document.addEventListener('pointerup', onUp);
-    document.addEventListener('pointercancel', onUp);
+    bar.addEventListener('pointermove', onMove);
+    bar.addEventListener('pointerup', onUp);
+    bar.addEventListener('pointercancel', onUp);
     e.preventDefault();
   }, [winId, onFocus]);
 

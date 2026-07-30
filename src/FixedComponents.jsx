@@ -415,7 +415,8 @@ function DialupOverlay({ phase }) {
           <div className={`dialup-status${done ? ' dialup-done' : ''}`}>{phase}</div>
           <div className="dialup-bar-wrap">
             <div className="dialup-bar">
-              <div className="dialup-fill" style={{ width:`${Math.round((baud/56000)*100)}%` }} />
+              <div className="dialup-fill"
+                   style={{ clipPath:`inset(0 ${100 - Math.round((baud/56000)*100)}% 0 0)` }} />
             </div>
           </div>
           <div className="dialup-hint">Please wait while connecting...</div>
@@ -450,8 +451,15 @@ function ContextMenu({ pos, onAction, onClose }) {
   const MENU_H = CTX_ITEMS.reduce((h, it) => h + (it === null ? 8 : 22), 8);
   const left = Math.min(pos.x, window.innerWidth  - MENU_W);
   const top  = Math.min(pos.y, window.innerHeight - MENU_H);
+  /* Scale out of the cursor, not the menu's centre. Measured against the
+     CLAMPED box: near a screen edge the menu slides back from pos, so the
+     click point is no longer its top-left corner.
+     The key remounts the menu per position, so a second right-click somewhere
+     else replays the open from the new origin instead of teleporting. */
   return (
-    <div className="ctx-menu" style={{ left, top }}>
+    <div className="ctx-menu"
+         key={`${left},${top}`}
+         style={{ left, top, '--ctx-ox': `${pos.x - left}px`, '--ctx-oy': `${pos.y - top}px` }}>
       {CTX_ITEMS.map((item, i) =>
         item === null
           ? <div key={i} className="ctx-div" />
