@@ -1,4 +1,5 @@
 import { GameEngineProvider } from './game/core/GameEngineContext';
+import type { CameraMode } from './game/rendering/CameraRig';
 import { GameCanvas } from './components/GameCanvas/GameCanvas';
 import { HUD } from './components/HUD/HUD';
 import { MainMenu } from './components/Menus/MainMenu';
@@ -6,12 +7,16 @@ import './NeuralDefenseGame.css';
 
 export interface NeuralDefenseGameProps {
   className?: string;
+  /** @default 'perspective' */
+  cameraMode?: CameraMode;
+  /** CRT scanline/vignette/curvature post-process layer. @default true */
+  crtEnabled?: boolean;
 }
 
 /** Root of the Neural Defense game module — a self-contained Win95-style game
  *  window (titlebar + 4:3 viewport) that can be dropped anywhere in the
  *  portfolio. Owns its own GameEngine instance via GameEngineProvider. */
-export function NeuralDefenseGame({ className }: NeuralDefenseGameProps) {
+export function NeuralDefenseGame({ className, cameraMode, crtEnabled }: NeuralDefenseGameProps) {
   return (
     <GameEngineProvider>
       <div className={['nd-window', className].filter(Boolean).join(' ')}>
@@ -25,7 +30,7 @@ export function NeuralDefenseGame({ className }: NeuralDefenseGameProps) {
           </div>
         </div>
         <div className="nd-viewport">
-          <GameCanvas />
+          <GameCanvas cameraMode={cameraMode} crtEnabled={crtEnabled} />
           <MainMenu />
           <HUD />
         </div>
