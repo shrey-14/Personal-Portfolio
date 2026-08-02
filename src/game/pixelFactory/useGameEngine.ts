@@ -21,10 +21,12 @@ export function useGameEngine() {
   const [toastQueue, setToastQueue] = useState<UnlockToastState[]>([]);
   const [eventBanner, setEventBanner] = useState<EventBannerState | null>(null);
   const [moduleUnlockBanner, setModuleUnlockBanner] = useState<ModuleUnlockState | null>(null);
+  const [showTutorial, setShowTutorial] = useState(false);
   const rafRef = useRef<number | null>(null);
   const lastTsRef = useRef<number | null>(null);
   const bannerTimerRef = useRef<number | null>(null);
   const unlockTimerRef = useRef<number | null>(null);
+  const tutorialTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     audio.sound = settings.sound;
@@ -44,9 +46,15 @@ export function useGameEngine() {
     unlockTimerRef.current = window.setTimeout(() => setModuleUnlockBanner(null), 3200);
   }, []);
 
+  const stopLoop = useCallback(() => {
+    if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    lastTsRef.current = null;
+  }, []);
+
   const makeEngine = useCallback(() => new GameEngine({
-    onSound: (name) => {
-      (audio as any)[name]?.();
+    onSound: (name, arg) => {
+      (audio as any)[name]?.(arg);
     },
     onToast: (toast) => setToastQueue(q => [...q, toast]),
     onModuleUnlock: (id) => showModuleUnlock(id),
@@ -58,14 +66,11 @@ export function useGameEngine() {
       setLastStats(stats);
       setPhase('gameover');
       audio.stopMusic();
+      // The engine itself no-ops once ended, but the rAF loop would still
+      // spin forever re-rendering an unchanged snapshot every frame.
+      stopLoop();
     },
-  }), [showEventBanner, showModuleUnlock]);
-
-  const stopLoop = useCallback(() => {
-    if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
-    rafRef.current = null;
-    lastTsRef.current = null;
-  }, []);
+  }), [showEventBanner, showModuleUnlock, stopLoop]);
 
   const loop = useCallback((ts: number) => {
     const engine = engineRef.current;
@@ -94,6 +99,10 @@ export function useGameEngine() {
     setPhase('playing');
     if (settings.music) audio.startMusic();
     startLoop();
+
+    setShowTutorial(true);
+    if (tutorialTimerRef.current) window.clearTimeout(tutorialTimerRef.current);
+    tutorialTimerRef.current = window.setTimeout(() => setShowTutorial(false), 8000);
   }, [makeEngine, startLoop, settings.music]);
 
   const pauseGame = useCallback(() => {
@@ -116,10 +125,18 @@ export function useGameEngine() {
     setPhase('menu');
   }, [stopLoop]);
 
-  useEffect(() => () => { stopLoop(); audio.stopMusic(); }, [stopLoop]);
+  useEffect(() => () => {
+    stopLoop();
+    audio.stopMusic();
+    if (tutorialTimerRef.current) window.clearTimeout(tutorialTimerRef.current);
+  }, [stopLoop]);
 
   const addBelt = useCallback((from: ModuleId, to: ModuleId) => {
-    engineRef.current?.addBelt(from, to);
+    const built = engineRef.current?.addBelt(from, to);
+    if (built) {
+      setShowTutorial(false);
+      if (tutorialTimerRef.current) window.clearTimeout(tutorialTimerRef.current);
+    }
   }, []);
   const removeBelt = useCallback((id: string) => {
     engineRef.current?.removeBelt(id);
@@ -142,7 +159,7 @@ export function useGameEngine() {
 
   return {
     phase, snapshot, highScore, settings, lastStats, isNewBest,
-    toastQueue, eventBanner, moduleUnlockBanner,
+    toastQueue, eventBanner, moduleUnlockBanner, showTutorial,
     newGame, pauseGame, resumeGame, quitToMenu,
     addBelt, removeBelt, collectPowerup, dismissToast, updateSettings,
   };

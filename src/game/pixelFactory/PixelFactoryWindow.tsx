@@ -11,7 +11,7 @@ import { audio } from './audio';
 import GameCanvas from './components/GameCanvas';
 import HUD from './components/HUD';
 import SidePanel from './components/SidePanel';
-import { EventBanner, ModuleUnlockBanner, UnlockToast } from './components/Banners';
+import { EventBanner, ModuleUnlockBanner, UnlockToast, TutorialBanner } from './components/Banners';
 import { MainMenu, PauseMenu, GameOverDialog, SettingsDialog, CreditsDialog } from './components/MenuDialogs';
 import type { UnlockToastState } from './types';
 import './pixelfactory.css';
@@ -32,6 +32,16 @@ export default function PixelFactoryWindow() {
     if (os.reducedMotion) engine.updateSettings({ reducedMotion: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Closing or minimizing the window must stop the simulation — otherwise
+  // the rAF loop, sound effects, and scoring keep running invisibly forever
+  // once the player thinks they've dismissed the game.
+  useEffect(() => {
+    if ((!winState.open || winState.minimized) && engine.phase === 'playing') {
+      engine.pauseGame();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [winState.open, winState.minimized]);
 
   useEffect(() => {
     if (!winState.open || winState.minimized) return;
@@ -143,6 +153,7 @@ export default function PixelFactoryWindow() {
                   onRemoveBelt={engine.removeBelt}
                   onCollectPowerup={engine.collectPowerup}
                 />
+                <TutorialBanner show={engine.showTutorial && engine.phase === 'playing'} />
                 <EventBanner banner={engine.eventBanner} />
                 <ModuleUnlockBanner banner={engine.moduleUnlockBanner} />
                 {engine.toastQueue.slice(0, 1).map(t => (

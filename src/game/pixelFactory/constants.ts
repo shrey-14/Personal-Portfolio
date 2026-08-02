@@ -102,9 +102,15 @@ export const TUNING = {
   overloadOnWaitTick: 4, // per second waiting with no route, once past grace period
   waitGraceSeconds: 5,
   waitHardTimeout: 13,
+  warmupSeconds: 18,        // a brand-new game gets extra slack while the player builds their first belts
+  warmupGraceBonus: 6,
+  warmupTimeoutBonus: 8,
   scorePerCorrect: 10,
   comboStep: 0.12,
   comboMax: 3,
+  perfectRoutingBonus: 6,   // delivered with zero wait — a route existed the instant it spawned
+  speedBonusThreshold: 3.5, // seconds spawn-to-delivery to count as "fast"
+  speedBonusAmount: 4,
   eventMinGap: 22,
   eventMaxGap: 42,
   powerupMinGap: 14,

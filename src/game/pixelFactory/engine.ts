@@ -22,7 +22,8 @@ function clamp(v: number, lo: number, hi: number) { return Math.max(lo, Math.min
 export interface EngineCallbacks {
   onSound: (name:
     'workerComplete' | 'workerWrong' | 'workerMissed' | 'diskAccess' | 'printer' |
-    'notification' | 'errorBeep' | 'combo' | 'overloadAlarm' | 'moduleStartup' | 'powerup') => void;
+    'notification' | 'errorBeep' | 'combo' | 'overloadAlarm' | 'moduleStartup' | 'powerup',
+    arg?: number) => void;
   onToast: (toast: UnlockToastState) => void;
   onModuleUnlock: (moduleId: ModuleId) => void;
   onEventStart: (id: EventId) => void;
@@ -56,6 +57,7 @@ export class GameEngine {
   belts: BeltEdge[] = [];
   moduleStates: Record<ModuleId, ModuleState> = {} as any;
   moduleWorkFlash: Record<ModuleId, number> = {} as any;
+  moduleOverloadFlash: Record<ModuleId, number> = {} as any;
   perModuleCorrect: Partial<Record<ModuleId, number>> = {};
   floatingPowerups: FloatingPowerup[] = [];
   floatingTexts: FloatingText[] = [];
@@ -77,16 +79,25 @@ export class GameEngine {
     for (const m of MODULES) {
       this.moduleStates[m.id] = m.tier === 0 ? 'idle' : 'locked';
       this.moduleWorkFlash[m.id] = 0;
+      this.moduleOverloadFlash[m.id] = 0;
     }
   }
 
   /* ── belts ────────────────────────────────────────────────────────────── */
   addBelt(from: ModuleId, to: ModuleId): boolean {
-    if (from === to) return false;
-    if (this.moduleStates[to] === 'locked' || this.moduleStates[from] === 'locked') return false;
-    if (this.belts.some(b => b.from === from && b.to === to)) return false;
+    if (
+      from === to
+      || this.moduleStates[to] === 'locked' || this.moduleStates[from] === 'locked'
+      || this.belts.some(b => b.from === from && b.to === to)
+    ) {
+      this.cb.onSound('errorBeep');
+      return false;
+    }
     const path = findCellPath(portOf(from), portOf(to));
-    if (!path) return false;
+    if (!path) {
+      this.cb.onSound('errorBeep');
+      return false;
+    }
     this.belts.push({ id: `${from}->${to}#${this.idCounter++}`, from, to, cells: path });
     this.cb.onSound('diskAccess');
     return true;
@@ -302,6 +313,8 @@ export class GameEngine {
     for (const id in this.moduleWorkFlash) {
       // @ts-expect-error string-indexed
       this.moduleWorkFlash[id] = Math.max(0, this.moduleWorkFlash[id] - dt);
+      // @ts-expect-error string-indexed
+      this.moduleOverloadFlash[id] = Math.max(0, this.moduleOverloadFlash[id] - dt);
     }
 
     // module unlocks
@@ -358,6 +371,12 @@ export class GameEngine {
     // workers
     const speedMult = this.speedMultiplier();
     const baseSpeed = Math.min(TUNING.workerSpeedMax, TUNING.workerSpeedStart + this.t * 0.008);
+    // A brand-new game can't have every tier-0 module connected within the
+    // first couple of seconds, so the very first workers get extra slack
+    // before waiting starts costing anything.
+    const warmup = this.t < TUNING.warmupSeconds;
+    const waitGrace = TUNING.waitGraceSeconds + (warmup ? TUNING.warmupGraceBonus : 0);
+    const waitHardTimeout = TUNING.waitHardTimeout + (warmup ? TUNING.warmupTimeoutBonus : 0);
     const survivors: WorkerState[] = [];
     for (const w of this.workers) {
       w.animT += dt;
@@ -366,10 +385,10 @@ export class GameEngine {
         this.assignRoute(w);
         if (w.anim === 'wait') {
           w.waitT += dt;
-          if (w.waitT > TUNING.waitGraceSeconds) {
+          if (w.waitT > waitGrace) {
             this.overload = clamp(this.overload + dt * TUNING.overloadOnWaitTick, 0, 100);
           }
-          if (w.waitT > TUNING.waitHardTimeout) {
+          if (w.waitT > waitHardTimeout) {
             this.missed++;
             this.combo = 0;
             this.overload = clamp(this.overload + TUNING.overloadOnMissed, 0, 100);
@@ -424,8 +443,12 @@ export class GameEngine {
     }
     this.workers = survivors;
 
-    // overload decay + alarm
-    if (this.overload > 0) this.overload = clamp(this.overload - TUNING.overloadDecayPerSec * dt, 0, 100);
+    // overload decay + alarm — decay must NOT run once overload is already
+    // maxed, or it shaves the value back under 100 in the same tick it
+    // peaked and the game-over check below never sees a true >=100.
+    if (this.overload > 0 && this.overload < 100) {
+      this.overload = clamp(this.overload - TUNING.overloadDecayPerSec * dt, 0, 100);
+    }
     if (this.overload >= 100) {
       this.ended = true;
       this.cb.onSound('overloadAlarm');
@@ -442,21 +465,48 @@ export class GameEngine {
       this.bestCombo = Math.max(this.bestCombo, this.combo);
       const comboMult = 1 + Math.min(this.combo * TUNING.comboStep, TUNING.comboMax);
       const powerupMult = this.hasPowerup('combo_multiplier') ? 2 : 1;
-      const gain = Math.round(TUNING.scorePerCorrect * comboMult * powerupMult);
+      let gain = Math.round(TUNING.scorePerCorrect * comboMult * powerupMult);
+      // Perfect routing: a belt already led all the way to the correct
+      // module the instant this worker spawned, so it never sat in 'wait'.
+      const perfect = w.waitT === 0;
+      // Speed bonus: delivered quickly from spawn, wait time included —
+      // rewards a factory laid out so workers barely queue at all.
+      const fast = (this.t - w.spawnedAt) < TUNING.speedBonusThreshold;
+      let tag = '';
+      if (perfect) { gain += TUNING.perfectRoutingBonus; tag += ' ★PERFECT'; }
+      if (fast) { gain += TUNING.speedBonusAmount; tag += ' ⚡FAST'; }
       this.score += gain;
       this.correct++;
       this.moduleWorkFlash[moduleId] = 0.6;
-      this.cb.onSound(this.combo > 1 && this.combo % 3 === 0 ? 'combo' : 'workerComplete');
-      this.addFloatingText(w.x, w.y, `+${gain}${this.combo > 1 ? ` x${this.combo}` : ''}`, '#39ff14');
+      this.cb.onSound(this.combo > 1 && this.combo % 3 === 0 ? 'combo' : 'workerComplete', this.combo);
+      // The Printer gets its own distinct clatter layered on top of the
+      // generic success chime — a module-flavoured sound, not just a score cue.
+      if (moduleId === 'printer') this.cb.onSound('printer');
+      this.addFloatingText(w.x, w.y, `+${gain}${this.combo > 1 ? ` x${this.combo}` : ''}${tag}`, '#39ff14');
       this.checkMilestones(moduleId);
       return 'correct';
     }
     this.combo = 0;
     this.wrong++;
     this.overload = clamp(this.overload + TUNING.overloadOnWrong, 0, 100);
+    // Whichever real module just choked on the wrong data visibly struggles
+    // for a few seconds — a per-module "overloaded" state, not just the
+    // global meter ticking up.
+    if (moduleId && this.moduleStates[moduleId] !== 'offline') this.moduleOverloadFlash[moduleId] = 2.2;
     this.cb.onSound('workerWrong');
     this.addFloatingText(w.x, w.y, 'WRONG', '#ffb454');
     return 'wrong';
+  }
+
+  /* Reported per-module state layers the transient work/overload flashes on
+     top of the persistent idle/offline/locked state — 'working' and
+     'overloaded' are real, visible states, not just a colour tweak. */
+  private displayState(id: ModuleId): ModuleState {
+    const base = this.moduleStates[id];
+    if (base === 'offline' || base === 'locked') return base;
+    if (this.moduleOverloadFlash[id] > 0) return 'overloaded';
+    if (this.moduleWorkFlash[id] > 0) return 'working';
+    return 'idle';
   }
 
   getStats(): GameStats {
@@ -468,10 +518,12 @@ export class GameEngine {
   }
 
   getSnapshot(): EngineSnapshot {
+    const moduleStates = {} as Record<ModuleId, ModuleState>;
+    for (const m of MODULES) moduleStates[m.id] = this.displayState(m.id);
     return {
       workers: this.workers,
       belts: this.belts,
-      moduleStates: { ...this.moduleStates },
+      moduleStates,
       moduleWorkFlash: { ...this.moduleWorkFlash },
       floatingPowerups: this.floatingPowerups,
       floatingTexts: this.floatingTexts,

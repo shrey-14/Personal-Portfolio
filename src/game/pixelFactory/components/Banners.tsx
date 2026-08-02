@@ -11,6 +11,20 @@ export function EventBanner({ banner }: { banner: EventBannerState | null }) {
   );
 }
 
+export function TutorialBanner({ show }: { show: boolean }) {
+  if (!show) return null;
+  return (
+    <div className="pf-banner pf-banner-unlock" role="status">
+      <div className="pf-banner-title">💡 GETTING STARTED</div>
+      <div className="pf-banner-sub">
+        Drag from A:\ (Floppy Drive) to another module to build your first belt —
+        or use the Route Builder panel on the left. New workers wait a little
+        longer for their first belt while you get set up.
+      </div>
+    </div>
+  );
+}
+
 export function ModuleUnlockBanner({ banner }: { banner: ModuleUnlockState | null }) {
   if (!banner) return null;
   return (

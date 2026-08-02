@@ -48,33 +48,41 @@ export default function ModuleMesh({
       return;
     }
     let s = 1;
-    if (workFlash > 0) s = 1 + Math.min(workFlash, 0.6) * 0.22;
+    if (state === 'working') s = 1 + Math.min(workFlash, 0.6) * 0.22;
+    else if (state === 'overloaded') s = 1 + Math.sin(t * 11) * 0.05;
     else if (state === 'idle') s = 1 + Math.sin(t * 1.4 + def.gx) * 0.015;
     else if (state === 'offline') s = 1 + Math.sin(t * 9) * 0.02;
     m.scale.setScalar(THREE.MathUtils.lerp(m.scale.x, s, 0.25));
     m.position.y = baseY + (connecting ? 0.08 : 0);
     if (state === 'offline') m.rotation.z = Math.sin(t * 14) * 0.015;
+    else if (state === 'overloaded') m.rotation.z = Math.sin(t * 8) * 0.035;
     else m.rotation.z = THREE.MathUtils.lerp(m.rotation.z, 0, 0.2);
   });
 
   if (state === 'locked') return null;
 
-  const color = state === 'offline' ? '#3a3a3a' : def.color;
-  const emissiveIntensity = workFlash > 0 ? 0.9 : state === 'offline' ? 0.1 : 0.35;
+  const color = state === 'offline' ? '#3a3a3a' : state === 'overloaded' ? '#c9622f' : def.color;
+  const emissive = state === 'offline' ? '#ff3030' : state === 'overloaded' ? '#ff8a3a' : def.emissive;
+  const emissiveIntensity = state === 'working' ? 0.9 : state === 'overloaded' ? 1 : state === 'offline' ? 0.1 : 0.35;
 
   return (
     <group position={[wx, 0, wz]}>
+      {/* Invisible hitbox, bigger than the visible cube — a real cube barely
+          30px tall on screen is a fussy pointer target and a much worse touch
+          target, so belt-dragging grabs a generous tap area instead. */}
       <mesh
-        ref={meshRef}
         position={[0, baseY, 0]}
-        castShadow
         onPointerDown={(e) => { e.stopPropagation(); onDown(); }}
         onPointerUp={(e) => { e.stopPropagation(); onUp(); }}
       >
+        <boxGeometry args={[0.95, size[1] + 0.55, 0.95]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+      <mesh ref={meshRef} position={[0, baseY, 0]} castShadow>
         <boxGeometry args={size} />
         <meshStandardMaterial
           color={color}
-          emissive={state === 'offline' ? '#ff3030' : def.emissive}
+          emissive={emissive}
           emissiveIntensity={emissiveIntensity}
           flatShading
           roughness={0.85}

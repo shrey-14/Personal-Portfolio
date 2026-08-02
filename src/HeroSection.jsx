@@ -5,10 +5,13 @@
    the choreography that drives them. All OS chrome (cursor, icons, taskbar,
    overlays) now lives in FixedComponents and is shared via OSContext.
    ═════════════════════════════════════════════════════════════════════════ */
-import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
+import { useRef, useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import heroFigureSrc from './assets/hero_figure.png';
 import heroFigureWebp from './assets/hero_figure.webp';
 import ContactWindow from './ContactWindow';
+/* Same code-split rationale as FixedComponents.jsx's desktop tree: Three.js
+   only downloads once the player actually opens the game, on mobile too. */
+const PixelFactoryWindow = lazy(() => import('./game/pixelFactory/PixelFactoryWindow'));
 import {
   useOS, playClick, playWindowOpen, playWhoosh, WIN98, DESKTOP_ICONS, cvHref,
 } from './OSContext';
@@ -862,6 +865,10 @@ function MobileHero({ shared }) {
   const [notepadSeen, setNotepadSeen] = useState(false);
   const onNotepadVisible = useCallback(() => setNotepadSeen(true), []);
 
+  const gameOpen = wins.pixelfactory?.open;
+  const [gameEverOpened, setGameEverOpened] = useState(false);
+  useEffect(() => { if (gameOpen) setGameEverOpened(true); }, [gameOpen]);
+
   /* Justified lockup on mobile too: PATEL is scaled to SHREY's exact width
      (both lines are centred by the parent, so origin-centre scaling keeps
      them concentric AND edge-aligned). Re-runs when fonts land or on resize. */
@@ -988,6 +995,14 @@ function MobileHero({ shared }) {
         onSound={playClick}
         onSent={playWhoosh}
       />
+      {/* Pixel Factory 95 on mobile — the drawer's launcher icon comes from
+          the same shared DESKTOP_ICONS list the desktop taskbar uses, so it
+          needs its own window mount here too, or the icon does nothing. */}
+      {gameEverOpened && (
+        <Suspense fallback={null}>
+          <PixelFactoryWindow />
+        </Suspense>
+      )}
 
       <MobileMenu
         onAction={handleAction}
