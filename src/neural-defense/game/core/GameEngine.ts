@@ -1,4 +1,5 @@
 import { AudioManager } from '../audio/AudioManager';
+import { CombatStore } from '../combat/CombatStore';
 import { SaveManager } from '../data/SaveManager';
 import { FIXED_TIMESTEP_HZ } from '../data/constants';
 import { EntityManager } from '../entities/EntityManager';
@@ -20,6 +21,7 @@ export class GameEngine {
   readonly save = new SaveManager();
   readonly systems = new SystemManager();
   readonly entities = new EntityManager();
+  readonly combat = new CombatStore();
 
   private state: GameState = GameState.Boot;
   private readonly stateListeners = new Set<StateListener>();

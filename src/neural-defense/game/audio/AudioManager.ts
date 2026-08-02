@@ -63,6 +63,31 @@ export class AudioManager {
     osc.stop(t + durationSeconds + 0.02);
   }
 
+  /** Frequency-sweep tone — a proper arcade laser "pew" rather than a flat
+   *  beep. Used for weapon fire; playBeep alone reads too static for that. */
+  playSweep(
+    startFrequency: number,
+    endFrequency: number,
+    durationSeconds = 0.15,
+    type: OscillatorType = 'square',
+  ): void {
+    if (this.muted || !this.ctx || this.ctx.state !== 'running') return;
+    const ctx = this.ctx;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    const t = ctx.currentTime;
+    osc.frequency.setValueAtTime(startFrequency, t);
+    osc.frequency.exponentialRampToValueAtTime(Math.max(endFrequency, 1), t + durationSeconds);
+    osc.connect(gain);
+    gain.connect(this.sfxGain!);
+
+    gain.gain.setValueAtTime(0.07, t);
+    gain.gain.linearRampToValueAtTime(0, t + durationSeconds);
+    osc.start(t);
+    osc.stop(t + durationSeconds + 0.02);
+  }
+
   dispose(): void {
     void this.ctx?.close();
     this.ctx = null;

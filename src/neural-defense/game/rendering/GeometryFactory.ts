@@ -30,6 +30,12 @@ export function createGroundPlane(width = 10, depth = 10, segments = 1): THREE.P
   return geometry;
 }
 
+/** Flat open ring, facing +Z by default — a HUD-style reticle/targeting
+ *  bracket, not a filled disc. */
+export function createRing(innerRadius = 0.5, outerRadius = 0.7, segments = 16): THREE.RingGeometry {
+  return new THREE.RingGeometry(innerRadius, outerRadius, segments);
+}
+
 export interface CrystalOptions {
   radius?: number;
   /** Icosahedron subdivision level — kept low (0-1) to stay low-poly. */

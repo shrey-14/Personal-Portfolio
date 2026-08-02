@@ -1,0 +1,47 @@
+.nd-energy {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 10px;
+  background: rgba(4, 6, 8, 0.55);
+  border: 1px solid var(--phosphor, #39ff14);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.nd-energy-label {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: var(--phosphor, #39ff14);
+}
+
+.nd-energy-label.nd-energy-locked {
+  color: #ff5555;
+}
+
+.nd-energy-segments {
+  display: flex;
+  gap: 3px;
+}
+
+.nd-energy-seg {
+  position: relative;
+  width: 20px;
+  height: 8px;
+  background: rgba(57, 255, 20, 0.12);
+  border: 1px solid var(--phosphor, #39ff14);
+  overflow: hidden;
+}
+
+.nd-energy-seg-fill {
+  position: absolute;
+  inset: 0;
+  width: 0%;
+  background: var(--phosphor, #39ff14);
+}

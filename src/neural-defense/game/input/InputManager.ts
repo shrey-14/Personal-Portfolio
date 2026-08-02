@@ -7,7 +7,7 @@ export interface PointerState {
   down: boolean;
 }
 
-type KeyListener = (code: string) => void;
+type KeyListener = (event: KeyboardEvent) => void;
 
 /** Low-level keyboard + pointer state, framework-agnostic so it can be shared
  *  by gameplay systems and UI alike. Call attach() once the game mounts and
@@ -62,14 +62,14 @@ export class InputManager {
 
   private handleKeyDown = (event: KeyboardEvent): void => {
     if (!this.keysDown.has(event.code)) {
-      this.keyDownListeners.forEach((listener) => listener(event.code));
+      this.keyDownListeners.forEach((listener) => listener(event));
     }
     this.keysDown.add(event.code);
   };
 
   private handleKeyUp = (event: KeyboardEvent): void => {
     this.keysDown.delete(event.code);
-    this.keyUpListeners.forEach((listener) => listener(event.code));
+    this.keyUpListeners.forEach((listener) => listener(event));
   };
 
   private handlePointerMove = (event: PointerEvent): void => {

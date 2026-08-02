@@ -1,5 +1,6 @@
 import { useMemo, type Ref } from 'react';
 import * as THREE from 'three';
+import { CombatController } from '../../game/combat';
 import { AICore } from '../../game/entities/aiCore';
 import type { AICoreHandle } from '../../game/entities/aiCore';
 import { createDefaultEnemies, EnemyView } from '../../game/entities/enemies';
@@ -41,6 +42,8 @@ export function PlaceholderScene({ aiCoreRef, aiCoreHealth = 1, enemies }: Place
       {activeEnemies.map((enemy) => (
         <EnemyView key={enemy.id} enemy={enemy} corePosition={CORE_POSITION} />
       ))}
+
+      <CombatController enemies={activeEnemies} corePosition={CORE_POSITION} />
     </>
   );
 }
