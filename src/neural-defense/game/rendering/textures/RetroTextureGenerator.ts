@@ -155,6 +155,46 @@ export interface GridOptions {
   repeat?: [number, number];
 }
 
+export interface CrackOptions {
+  size?: number;
+  seed?: number;
+  branches?: number;
+  repeat?: [number, number];
+}
+
+/** Procedural damage-crack overlay: a handful of jagged polylines radiating
+ *  from random origins on an otherwise transparent canvas (no background
+ *  fill, unlike every other generator here). Meant to sit just above a body
+ *  mesh via MaterialFactory.createDecalMaterial, with opacity driven by
+ *  damage taken — same seed always draws the same cracks. */
+export function createCrackTexture(
+  lineColor: number,
+  { size = 32, seed = 1, branches = 3, repeat = [1, 1] }: CrackOptions = {},
+): THREE.CanvasTexture {
+  const ctx = createContext(size);
+  ctx.clearRect(0, 0, size, size);
+  const color = quantizeToPalette(hexToRgb(lineColor));
+  ctx.strokeStyle = rgbToCss(color);
+  ctx.lineWidth = 1;
+  const random = createSeededRandom(seed);
+
+  for (let branch = 0; branch < branches; branch++) {
+    let x = random() * size;
+    let y = random() * size;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    const segments = 4 + Math.floor(random() * 3);
+    for (let segment = 0; segment < segments; segment++) {
+      x += (random() - 0.5) * (size / 4);
+      y += (random() - 0.5) * (size / 4);
+      ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  return toTexture(ctx, repeat);
+}
+
 /** VGA-style graph-paper grid — the corridor/floor-panel texture of every
  *  Descent-era flight sim. */
 export function createGridTexture(

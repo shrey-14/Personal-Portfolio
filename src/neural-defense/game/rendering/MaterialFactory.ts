@@ -54,3 +54,21 @@ export function createUnlitMaterial(
 export function createVertexColorMaterial(): THREE.MeshLambertMaterial {
   return new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true, fog: true });
 }
+
+export interface DecalMaterialOptions {
+  map: THREE.Texture;
+  opacity?: number;
+}
+
+/** Unlit, transparent, non-depth-writing — for a texture layered just above a
+ *  body mesh (damage cracks, scorch marks, …) without z-fighting or
+ *  occluding what's behind it when faded to 0 opacity. */
+export function createDecalMaterial({ map, opacity = 1 }: DecalMaterialOptions): THREE.MeshBasicMaterial {
+  return new THREE.MeshBasicMaterial({
+    map,
+    transparent: true,
+    opacity,
+    depthWrite: false,
+    fog: true,
+  });
+}

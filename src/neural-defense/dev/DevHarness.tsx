@@ -1,15 +1,19 @@
 import { useMemo, useRef, useState } from 'react';
 import { NeuralDefenseGame } from '../NeuralDefenseGame';
 import type { AICoreHandle } from '../game/entities/aiCore';
+import { createDefaultEnemies } from '../game/entities/enemies';
 import type { CameraMode } from '../game/rendering/CameraRig';
 
 /** Dev-only QA harness: mounts the game plus a few plain HTML controls to
- *  exercise the AICore's imperative reactions and health-driven critical
- *  state without needing real gameplay wired up yet. Never shipped —
- *  game-dev.html is a separate Vite entry from the portfolio's index.html. */
+ *  exercise the AICore's imperative reactions, health-driven critical state,
+ *  and the Armored enemy's live damage cracks — without needing real
+ *  gameplay wired up yet. Never shipped — game-dev.html is a separate Vite
+ *  entry from the portfolio's index.html. */
 export function DevHarness() {
   const aiCoreRef = useRef<AICoreHandle>(null);
   const [health, setHealth] = useState(1);
+  const enemies = useMemo(() => createDefaultEnemies(), []);
+  const armored = enemies.find((enemy) => enemy.kind === 'armored')!;
 
   const params = useMemo(() => new URLSearchParams(window.location.search), []);
   const cameraMode = (params.get('camera') as CameraMode | null) ?? undefined;
@@ -23,16 +27,17 @@ export function DevHarness() {
         crtEnabled={crtEnabled}
         aiCoreRef={aiCoreRef}
         aiCoreHealth={health}
+        enemies={enemies}
       />
       <div className="dev-controls">
         <button type="button" onClick={() => aiCoreRef.current?.playDamage()}>
-          Damage
+          Core Damage
         </button>
         <button type="button" onClick={() => aiCoreRef.current?.playVictory()}>
-          Victory
+          Core Victory
         </button>
         <label>
-          Health {health.toFixed(2)}
+          Core Health {health.toFixed(2)}
           <input
             type="range"
             min={0}
@@ -42,6 +47,9 @@ export function DevHarness() {
             onChange={(event) => setHealth(Number(event.target.value))}
           />
         </label>
+        <button type="button" onClick={() => armored.takeDamage(12)}>
+          Damage Armored
+        </button>
       </div>
     </>
   );

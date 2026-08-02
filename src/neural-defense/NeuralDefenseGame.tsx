@@ -1,6 +1,7 @@
 import type { Ref } from 'react';
 import { GameEngineProvider } from './game/core/GameEngineContext';
 import type { AICoreHandle } from './game/entities/aiCore';
+import type { EnemyBase } from './game/entities/enemies';
 import type { CameraMode } from './game/rendering/CameraRig';
 import { GameCanvas } from './components/GameCanvas/GameCanvas';
 import { HUD } from './components/HUD/HUD';
@@ -18,6 +19,8 @@ export interface NeuralDefenseGameProps {
   aiCoreRef?: Ref<AICoreHandle>;
   /** 0..1 — drives the AI Core's continuous critical-state pulse. @default 1 */
   aiCoreHealth?: number;
+  /** Explicit enemy cast to render; omit for a default showcase trio. */
+  enemies?: EnemyBase[];
 }
 
 /** Root of the Neural Defense game module — a self-contained Win95-style game
@@ -29,6 +32,7 @@ export function NeuralDefenseGame({
   crtEnabled,
   aiCoreRef,
   aiCoreHealth,
+  enemies,
 }: NeuralDefenseGameProps) {
   return (
     <GameEngineProvider>
@@ -48,6 +52,7 @@ export function NeuralDefenseGame({
             crtEnabled={crtEnabled}
             aiCoreRef={aiCoreRef}
             aiCoreHealth={aiCoreHealth}
+            enemies={enemies}
           />
           <MainMenu />
           <HUD />

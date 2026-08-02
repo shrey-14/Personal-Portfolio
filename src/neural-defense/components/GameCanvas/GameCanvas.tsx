@@ -2,6 +2,7 @@ import { useRef, type Ref } from 'react';
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { AICoreHandle } from '../../game/entities/aiCore';
+import type { EnemyBase } from '../../game/entities/enemies';
 import { CameraRig, type CameraMode } from '../../game/rendering/CameraRig';
 import { CRTPostProcessing } from '../../game/rendering/crt/CRTPostProcessing';
 import { useViewportFit } from '../../game/rendering/useViewportFit';
@@ -14,6 +15,7 @@ export interface GameCanvasProps {
   crtEnabled?: boolean;
   aiCoreRef?: Ref<AICoreHandle>;
   aiCoreHealth?: number;
+  enemies?: EnemyBase[];
 }
 
 /** Canvas wrapper: measures its container, letterboxes to the fixed 4:3
@@ -25,6 +27,7 @@ export function GameCanvas({
   crtEnabled = true,
   aiCoreRef,
   aiCoreHealth,
+  enemies,
 }: GameCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const fit = useViewportFit(containerRef);
@@ -46,7 +49,7 @@ export function GameCanvas({
       >
         <CameraRig mode={cameraMode} />
         <GameLoopDriver />
-        <PlaceholderScene aiCoreRef={aiCoreRef} aiCoreHealth={aiCoreHealth} />
+        <PlaceholderScene aiCoreRef={aiCoreRef} aiCoreHealth={aiCoreHealth} enemies={enemies} />
         <CRTPostProcessing enabled={crtEnabled} />
       </Canvas>
     </div>
