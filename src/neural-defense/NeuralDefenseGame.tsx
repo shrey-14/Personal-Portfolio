@@ -1,4 +1,6 @@
+import type { Ref } from 'react';
 import { GameEngineProvider } from './game/core/GameEngineContext';
+import type { AICoreHandle } from './game/entities/aiCore';
 import type { CameraMode } from './game/rendering/CameraRig';
 import { GameCanvas } from './components/GameCanvas/GameCanvas';
 import { HUD } from './components/HUD/HUD';
@@ -11,12 +13,23 @@ export interface NeuralDefenseGameProps {
   cameraMode?: CameraMode;
   /** CRT scanline/vignette/curvature post-process layer. @default true */
   crtEnabled?: boolean;
+  /** Reach the central AI Core's imperative handle (playDamage/playVictory)
+   *  from outside the render tree — gameplay systems trigger reactions here. */
+  aiCoreRef?: Ref<AICoreHandle>;
+  /** 0..1 — drives the AI Core's continuous critical-state pulse. @default 1 */
+  aiCoreHealth?: number;
 }
 
 /** Root of the Neural Defense game module — a self-contained Win95-style game
  *  window (titlebar + 4:3 viewport) that can be dropped anywhere in the
  *  portfolio. Owns its own GameEngine instance via GameEngineProvider. */
-export function NeuralDefenseGame({ className, cameraMode, crtEnabled }: NeuralDefenseGameProps) {
+export function NeuralDefenseGame({
+  className,
+  cameraMode,
+  crtEnabled,
+  aiCoreRef,
+  aiCoreHealth,
+}: NeuralDefenseGameProps) {
   return (
     <GameEngineProvider>
       <div className={['nd-window', className].filter(Boolean).join(' ')}>
@@ -30,7 +43,12 @@ export function NeuralDefenseGame({ className, cameraMode, crtEnabled }: NeuralD
           </div>
         </div>
         <div className="nd-viewport">
-          <GameCanvas cameraMode={cameraMode} crtEnabled={crtEnabled} />
+          <GameCanvas
+            cameraMode={cameraMode}
+            crtEnabled={crtEnabled}
+            aiCoreRef={aiCoreRef}
+            aiCoreHealth={aiCoreHealth}
+          />
           <MainMenu />
           <HUD />
         </div>

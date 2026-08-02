@@ -1,6 +1,7 @@
-import { useRef } from 'react';
+import { useRef, type Ref } from 'react';
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
+import type { AICoreHandle } from '../../game/entities/aiCore';
 import { CameraRig, type CameraMode } from '../../game/rendering/CameraRig';
 import { CRTPostProcessing } from '../../game/rendering/crt/CRTPostProcessing';
 import { useViewportFit } from '../../game/rendering/useViewportFit';
@@ -11,13 +12,20 @@ import './GameCanvas.css';
 export interface GameCanvasProps {
   cameraMode?: CameraMode;
   crtEnabled?: boolean;
+  aiCoreRef?: Ref<AICoreHandle>;
+  aiCoreHealth?: number;
 }
 
 /** Canvas wrapper: measures its container, letterboxes to the fixed 4:3
  *  virtual resolution, and forces the WebGL drawing buffer down to that
  *  resolution via the `dpr` override — see game/rendering/resolution.ts.
  *  CameraRig owns camera creation, so no `camera` prop is passed to <Canvas>. */
-export function GameCanvas({ cameraMode = 'perspective', crtEnabled = true }: GameCanvasProps) {
+export function GameCanvas({
+  cameraMode = 'perspective',
+  crtEnabled = true,
+  aiCoreRef,
+  aiCoreHealth,
+}: GameCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const fit = useViewportFit(containerRef);
 
@@ -38,7 +46,7 @@ export function GameCanvas({ cameraMode = 'perspective', crtEnabled = true }: Ga
       >
         <CameraRig mode={cameraMode} />
         <GameLoopDriver />
-        <PlaceholderScene />
+        <PlaceholderScene aiCoreRef={aiCoreRef} aiCoreHealth={aiCoreHealth} />
         <CRTPostProcessing enabled={crtEnabled} />
       </Canvas>
     </div>
