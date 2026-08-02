@@ -1,0 +1,337 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Pixel Factory 95 — scoped Win95-chrome stylesheet.
+   Deliberately its own classic grey/navy palette (not SHREY/OS graphite) so
+   the game reads as "an old .exe running inside the OS", the way Solitaire
+   or Minesweeper look distinct from the shell hosting them.
+   ═════════════════════════════════════════════════════════════════════════ */
+.pf-root, .pf-root * { box-sizing: border-box; }
+.pf-root {
+  --pf-face: #c0c0c0;
+  --pf-lt: #ffffff;
+  --pf-dk: #808080;
+  --pf-dkdk: #000000;
+  --pf-navy1: #000080;
+  --pf-navy2: #1084d0;
+  --pf-text: #000000;
+  font-family: 'IBM Plex Sans', Tahoma, Geneva, sans-serif;
+}
+
+.pf-window {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(1040px, 96vw);
+  height: min(720px, 88vh);
+  z-index: 90;
+  background: var(--pf-face);
+  border: 2px solid;
+  border-top-color: var(--pf-lt);
+  border-left-color: var(--pf-lt);
+  border-right-color: var(--pf-dkdk);
+  border-bottom-color: var(--pf-dkdk);
+  outline: 1px solid #000;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35), 0 20px 60px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: pfOpen 0.16s ease-out;
+}
+@keyframes pfOpen {
+  from { opacity: 0; transform: translate(-50%, -46%) scale(0.98); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pf-window { animation: none; }
+}
+
+.pf-titlebar {
+  height: 26px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
+  background: linear-gradient(90deg, var(--pf-navy1), var(--pf-navy2));
+  color: #fff;
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.pf-titlebar:active { cursor: grabbing; }
+.pf-title-txt { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pf-winbtns { display: flex; gap: 2px; }
+.pf-winbtn {
+  width: 20px; height: 18px;
+  background: var(--pf-face);
+  border: 1.5px solid;
+  border-top-color: var(--pf-lt); border-left-color: var(--pf-lt);
+  border-right-color: var(--pf-dkdk); border-bottom-color: var(--pf-dkdk);
+  font-size: 11px; font-weight: 700; color: #000;
+  display: flex; align-items: center; justify-content: center; padding: 0;
+  cursor: pointer;
+}
+.pf-winbtn:active {
+  border-top-color: var(--pf-dkdk); border-left-color: var(--pf-dkdk);
+  border-right-color: var(--pf-lt); border-bottom-color: var(--pf-lt);
+}
+
+.pf-body { flex: 1; display: flex; flex-direction: column; min-height: 0; position: relative; background: #14161c; }
+
+/* ── HUD ─────────────────────────────────────────────────────────────── */
+.pf-hud {
+  flex-shrink: 0;
+  display: flex; align-items: stretch; gap: 6px;
+  padding: 4px 6px;
+  background: var(--pf-face);
+  border-bottom: 2px solid var(--pf-dk);
+  font-family: 'IBM Plex Mono', monospace;
+  overflow-x: auto;
+}
+.pf-hud-cell {
+  background: #0a0a0a;
+  color: #39ff14;
+  border: 1.5px solid;
+  border-top-color: var(--pf-dkdk); border-left-color: var(--pf-dkdk);
+  border-right-color: var(--pf-lt); border-bottom-color: var(--pf-lt);
+  padding: 3px 8px;
+  font-size: 11px;
+  white-space: nowrap;
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+  min-width: 62px;
+}
+.pf-hud-cell b { font-size: 13px; line-height: 1.1; }
+.pf-hud-cell span { font-size: 9px; opacity: 0.75; letter-spacing: 0.04em; }
+.pf-hud-combo b { color: #ffb454; }
+.pf-hud-spacer { flex: 1; }
+
+.pf-overload-wrap { display: flex; flex-direction: column; justify-content: center; min-width: 140px; }
+.pf-overload-label { font-size: 9px; letter-spacing: 0.05em; margin-bottom: 2px; color: #333; }
+.pf-overload-bar {
+  width: 100%; height: 12px; background: #222;
+  border: 1.5px solid; border-top-color: var(--pf-dkdk); border-left-color: var(--pf-dkdk);
+  border-right-color: var(--pf-lt); border-bottom-color: var(--pf-lt);
+  overflow: hidden;
+}
+.pf-overload-fill { height: 100%; transition: width 0.15s linear; background: linear-gradient(90deg, #39ff14, #ffe14f 60%, #ff4040); }
+.pf-overload-bar.pf-critical { animation: pfBlink 0.5s steps(2) infinite; }
+@keyframes pfBlink { 50% { outline: 2px solid #ff4040; } }
+
+.pf-hud-btns { display: flex; gap: 4px; align-items: center; }
+.pf-icon-btn {
+  width: 26px; height: 26px;
+  background: var(--pf-face);
+  border: 1.5px solid;
+  border-top-color: var(--pf-lt); border-left-color: var(--pf-lt);
+  border-right-color: var(--pf-dkdk); border-bottom-color: var(--pf-dkdk);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 13px;
+}
+.pf-icon-btn:active {
+  border-top-color: var(--pf-dkdk); border-left-color: var(--pf-dkdk);
+  border-right-color: var(--pf-lt); border-bottom-color: var(--pf-lt);
+}
+
+/* ── canvas + CRT ────────────────────────────────────────────────────── */
+.pf-canvas-wrap { position: relative; z-index: 0; isolation: isolate; flex: 1; min-height: 0; overflow: hidden; }
+.pf-canvas-wrap canvas { display: block; width: 100% !important; height: 100% !important; touch-action: none; position: relative; z-index: 0; }
+.pf-crt { position: absolute; inset: 0; pointer-events: none; }
+.pf-crt-scan {
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(to bottom, rgba(0,0,0,0.16) 0px, rgba(0,0,0,0.16) 1px, transparent 1px, transparent 3px);
+  mix-blend-mode: multiply;
+  opacity: 0.5;
+}
+.pf-crt-vignette {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.45) 100%);
+}
+.pf-crt-flicker { position: absolute; inset: 0; background: #fff; opacity: 0; animation: pfFlicker 6.5s infinite; }
+@keyframes pfFlicker { 0%, 96%, 100% { opacity: 0; } 97% { opacity: 0.025; } 98.4% { opacity: 0; } 99% { opacity: 0.04; } }
+@media (prefers-reduced-motion: reduce) { .pf-crt-flicker { animation: none; } }
+
+/* module / worker in-scene tags */
+.pf-mod-tag {
+  display: flex; align-items: center; gap: 3px;
+  background: rgba(10, 10, 14, 0.72);
+  border: 1px solid rgba(255,255,255,0.25);
+  padding: 1px 4px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; color: #e8ecf5; letter-spacing: 0.03em;
+  border-radius: 2px;
+  transform: scale(0.9);
+}
+.pf-mod-offline { color: #ff8080; border-color: #ff4040; }
+.pf-mod-locked { display: none; }
+.pf-worker-tag {
+  background: #fff; border: 1.5px solid #1b1e24; border-radius: 3px;
+  width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.5);
+}
+.pf-worker-tag.pf-infected { border-color: #c94fff; box-shadow: 0 0 6px #c94fff; }
+.pf-worker-tag.pf-anim-panic { animation: pfShake 0.12s infinite; }
+@keyframes pfShake { 0%,100% { transform: translateX(0); } 50% { transform: translateX(1.5px); } }
+.pf-powerup-tag {
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: #fff;
+  text-shadow: 0 0 4px #000;
+}
+.pf-float-text {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  text-shadow: 1.5px 1.5px 0 #000;
+  white-space: nowrap;
+}
+
+/* ── event banner / unlock toast / module unlock ────────────────────── */
+.pf-banner {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  background: var(--pf-face);
+  border: 2px solid; border-top-color: var(--pf-lt); border-left-color: var(--pf-lt);
+  border-right-color: var(--pf-dkdk); border-bottom-color: var(--pf-dkdk);
+  outline: 1px solid #000;
+  padding: 6px 14px; text-align: center; max-width: 78%;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.4);
+  z-index: 20;
+  animation: pfBannerIn 0.2s ease-out;
+}
+@keyframes pfBannerIn { from { opacity: 0; transform: translate(-50%, -8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.pf-banner-title { font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 12px; color: #b00020; }
+.pf-banner-sub { font-size: 10px; color: #222; margin-top: 2px; }
+.pf-banner.pf-banner-unlock .pf-banner-title { color: #146b1e; }
+
+.pf-toast {
+  position: absolute; bottom: 14px; right: 14px;
+  width: 250px;
+  background: var(--pf-face);
+  border: 2px solid; border-top-color: var(--pf-lt); border-left-color: var(--pf-lt);
+  border-right-color: var(--pf-dkdk); border-bottom-color: var(--pf-dkdk);
+  outline: 1px solid #000;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.4);
+  z-index: 25;
+  animation: pfToastIn 0.22s ease-out;
+}
+@keyframes pfToastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.pf-toast-bar {
+  background: linear-gradient(90deg, var(--pf-navy1), var(--pf-navy2));
+  color: #fff; font-size: 11px; font-weight: 700; padding: 3px 6px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.pf-toast-body { padding: 8px; font-size: 11px; color: #000; }
+.pf-toast-body b { display: block; margin-bottom: 4px; }
+.pf-toast-actions { display: flex; gap: 6px; margin-top: 8px; }
+
+/* ── generic Win95 buttons/panels reused across dialogs ─────────────── */
+.pf-btn {
+  background: var(--pf-face);
+  border: 2px solid; border-top-color: var(--pf-lt); border-left-color: var(--pf-lt);
+  border-right-color: var(--pf-dkdk); border-bottom-color: var(--pf-dkdk);
+  padding: 5px 14px; font-size: 12px; color: #000; cursor: pointer;
+  font-family: inherit;
+}
+.pf-btn:active { border-top-color: var(--pf-dkdk); border-left-color: var(--pf-dkdk); border-right-color: var(--pf-lt); border-bottom-color: var(--pf-lt); }
+.pf-btn:focus-visible { outline: 2px dotted #000; outline-offset: 2px; }
+.pf-btn-primary { font-weight: 700; }
+.pf-btn:disabled { color: #808080; cursor: not-allowed; }
+
+.pf-panel {
+  border: 1.5px solid; border-top-color: var(--pf-dkdk); border-left-color: var(--pf-dkdk);
+  border-right-color: var(--pf-lt); border-bottom-color: var(--pf-lt);
+  background: #fff; padding: 8px;
+}
+
+/* ── overlay dialogs (menu / pause / gameover / settings / credits) ──── */
+.pf-overlay {
+  position: absolute; inset: 0;
+  background: rgba(6, 8, 12, 0.72);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 30;
+  padding: 16px;
+}
+.pf-dialog {
+  width: min(420px, 100%);
+  background: var(--pf-face);
+  border: 2px solid; border-top-color: var(--pf-lt); border-left-color: var(--pf-lt);
+  border-right-color: var(--pf-dkdk); border-bottom-color: var(--pf-dkdk);
+  outline: 1px solid #000;
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.5);
+  max-height: 100%;
+  display: flex; flex-direction: column;
+}
+.pf-dialog-title {
+  background: linear-gradient(90deg, var(--pf-navy1), var(--pf-navy2));
+  color: #fff; font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 12px;
+  padding: 5px 8px;
+}
+.pf-dialog-body { padding: 16px; overflow-y: auto; color: #000; }
+.pf-logo {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 20px; line-height: 1.5;
+  color: var(--pf-navy1);
+  text-shadow: 2px 2px 0 #ffb454;
+  text-align: center;
+  margin-bottom: 4px;
+}
+.pf-tagline { text-align: center; font-size: 11px; color: #333; margin-bottom: 16px; }
+.pf-menu-list { display: flex; flex-direction: column; gap: 8px; }
+.pf-menu-list .pf-btn { text-align: left; padding: 8px 12px; font-size: 13px; }
+.pf-hint { font-size: 10px; color: #444; text-align: center; margin-top: 12px; line-height: 1.5; }
+
+.pf-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; margin: 12px 0; font-size: 12px; }
+.pf-stat-grid b { float: right; }
+.pf-newbest { text-align: center; color: #b00020; font-weight: 700; font-family: 'Chakra Petch', sans-serif; margin-bottom: 8px; animation: pfPulse 0.8s infinite alternate; }
+@keyframes pfPulse { from { transform: scale(1); } to { transform: scale(1.06); } }
+@media (prefers-reduced-motion: reduce) { .pf-newbest { animation: none; } }
+
+.pf-dialog-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+.pf-settings-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #dcdcdc; font-size: 12px; }
+.pf-switch { width: 40px; height: 20px; background: #808080; border: 1.5px solid; border-top-color: var(--pf-dkdk); border-left-color: var(--pf-dkdk); border-right-color: var(--pf-lt); border-bottom-color: var(--pf-lt); position: relative; cursor: pointer; }
+.pf-switch[data-on="true"] { background: #146b1e; }
+.pf-switch i { position: absolute; top: 1px; left: 1px; width: 16px; height: 14px; background: var(--pf-face); border: 1px solid #000; transition: transform 0.12s; }
+.pf-switch[data-on="true"] i { transform: translateX(19px); }
+
+/* ── route / powerup DOM panels (keyboard + touch accessible) ────────── */
+.pf-side {
+  position: absolute; top: 8px; left: 8px; width: 200px;
+  display: flex; flex-direction: column; gap: 6px;
+  z-index: 15;
+  max-height: calc(100% - 16px);
+  overflow-y: auto;
+}
+.pf-route-panel, .pf-events-panel {
+  background: rgba(192, 192, 192, 0.94);
+  border: 1.5px solid; border-top-color: var(--pf-lt); border-left-color: var(--pf-lt);
+  border-right-color: var(--pf-dkdk); border-bottom-color: var(--pf-dkdk);
+  padding: 6px;
+  font-size: 10px;
+}
+.pf-route-panel h4, .pf-events-panel h4 {
+  margin: 0 0 4px; font-size: 10px; font-family: 'Chakra Petch', sans-serif; color: #000080; letter-spacing: 0.03em;
+}
+.pf-route-select { display: flex; gap: 3px; margin-bottom: 4px; }
+.pf-route-select select {
+  flex: 1; font-size: 10px; padding: 2px; border: 1px solid #000;
+  background: #fff; font-family: inherit;
+}
+.pf-belt-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; max-height: 90px; overflow-y: auto; }
+.pf-belt-list li { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #999; padding: 1px 3px; }
+.pf-belt-list button { border: none; background: transparent; color: #b00020; cursor: pointer; font-weight: 700; font-size: 11px; }
+.pf-active-effect { display: flex; align-items: center; gap: 4px; padding: 2px 0; }
+.pf-active-effect .pf-bar { flex: 1; height: 6px; background: #333; }
+.pf-active-effect .pf-bar i { display: block; height: 100%; background: #ffb454; }
+
+.pf-skiplink {
+  position: absolute; left: -9999px; top: 0; z-index: 100;
+  background: #000; color: #fff; padding: 6px 10px;
+}
+.pf-skiplink:focus { left: 8px; top: 8px; }
+
+@media (max-width: 720px) {
+  .pf-window { width: 100vw; height: 100vh; top: 0; left: 0; transform: none; }
+  .pf-side { width: 150px; font-size: 9px; }
+  .pf-hud-cell { min-width: 50px; }
+}
