@@ -1,0 +1,66 @@
+.nd-menu {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 6, 8, 0.55);
+  z-index: 2;
+}
+
+.nd-menu-panel {
+  min-width: 62%;
+  padding: 18px 22px 22px;
+  background: var(--win-face, #c0c0c0);
+  border: 2px solid;
+  border-color: var(--win-lt, #dfdfdf) var(--win-dk, #808080) var(--win-dk, #808080)
+    var(--win-lt, #dfdfdf);
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.35), 2px 2px 6px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  font-family: var(--f-sys);
+}
+
+.nd-menu-title {
+  margin: 4px 0 2px;
+  font-family: var(--f-display);
+  font-size: clamp(20px, 4vw, 32px);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--tb-start, #000080);
+  text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.nd-menu-subtitle {
+  margin: 0 0 16px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--win-text-dim, #404040);
+}
+
+.nd-menu-start {
+  font-family: var(--f-sys);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  padding: 10px 34px;
+  background: var(--win-face, #c0c0c0);
+  color: var(--win-text, #000);
+  border: 2px solid;
+  border-color: var(--win-lt, #dfdfdf) var(--win-dk, #808080) var(--win-dk, #808080)
+    var(--win-lt, #dfdfdf);
+  cursor: pointer;
+}
+
+.nd-menu-start:active {
+  border-color: var(--win-dk, #808080) var(--win-lt, #dfdfdf) var(--win-lt, #dfdfdf)
+    var(--win-dk, #808080);
+  transform: translateY(1px);
+}
+
+.nd-menu-hint {
+  margin: 14px 0 0;
+  font-family: var(--f-mono);
+  font-size: 9px;
+  color: var(--win-text-dim, #404040);
+  opacity: 0.7;
+}

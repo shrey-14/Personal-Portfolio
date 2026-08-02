@@ -1,0 +1,37 @@
+/* Standalone dev-harness styling — reproduces the handful of SHREY/OS design
+   tokens NeuralDefenseGame's CSS reads (win-face, tb-start, f-sys, …) so the
+   game previews here exactly as it will look once embedded in the real
+   portfolio, without importing the portfolio's own global.css. */
+:root {
+  --win-face: #c0c0c0;
+  --win-lt: #dfdfdf;
+  --win-dk: #808080;
+  --win-text: #000000;
+  --win-text-dim: #404040;
+  --tb-start: #000080;
+  --tb-end: #1084d0;
+  --phosphor: #39ff14;
+  --accent: #e89020;
+  --f-display: 'Chakra Petch', 'Arial Narrow', sans-serif;
+  --f-sys: 'IBM Plex Sans', 'Segoe UI', Tahoma, sans-serif;
+  --f-mono: 'IBM Plex Mono', 'Consolas', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: #1b1e24;
+}
+
+#root {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+}
