@@ -64,3 +64,23 @@ export const OsMaps         = os('app-maps', 'app-maps');           // AI Radar
 export const OsImageViewer  = os('app-image-viewer', 'app-image-viewer'); // vision
 export const OsCertificate  = os('certificate', 'certificate');     // 1st place
 export const OsBrowser      = os('app-browser', 'app-browser');
+
+/* ── Pixel Factory 95 launcher ──
+   Hand-drawn inline SVG (no PNG asset) — a little chip-and-conveyor glyph
+   in the same chunky, flat-shaded language as the SerenityOS set, sized as
+   crisp vectors instead of an upscaled bitmap. */
+export function OsGameFactory({ size = 16, className = '', label, ...rest }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" shapeRendering="crispEdges"
+      role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true}
+      className={`os-ico ${className}`} {...rest}>
+      <rect x="1" y="1" width="14" height="14" fill="#3a7bd5" />
+      <rect x="2" y="2" width="12" height="12" fill="#1b1e24" />
+      <rect x="3" y="3" width="4" height="4" fill="#39ff14" />
+      <rect x="9" y="3" width="4" height="4" fill="#ffb454" />
+      <rect x="3" y="9" width="4" height="4" fill="#ffb454" />
+      <rect x="9" y="9" width="4" height="4" fill="#39ff14" />
+      <rect x="7" y="7" width="2" height="2" fill="#fff" />
+    </svg>
+  );
+}

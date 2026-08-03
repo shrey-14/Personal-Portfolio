@@ -9,7 +9,7 @@
    The desktop shell is gated to !isMobile; on mobile the hero renders its own
    self-contained menu/overlays, so nothing double-renders.
    ═════════════════════════════════════════════════════════════════════════ */
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { CRTShutdownAnimation } from './CRTBootAnimation.jsx';
 import {
@@ -25,6 +25,7 @@ import {
 import {
   OsComputer, OsFolder, OsPdf, OsMail, OsShutdown, OsHelp, OsRecycleBin, OsText,
   OsPaint, OsTextEditor, OsSettings, OsDisplaySet, OsSysMonitor, OsProfiler, OsTerminal,
+  OsGameFactory,
 } from './OsIcons.jsx';
 
 function DotRingCursor() {
@@ -592,6 +593,7 @@ function AboutDialog({ open, onClose }) {
 }
 
 const START_ITEMS = [
+  { Ico: OsGameFactory, label:'Pixel Factory 95', action:'pixelfactory' },
   { Ico: OsFolder,   label:'Projects',     action:'projects' },
   { Ico: OsPdf,      label:'Resume',       href:cvHref, download:'Shrey_Patel_CV.pdf' },
   { Ico: OsMail,     label:'Contact',      action:'contact' },
@@ -1026,6 +1028,11 @@ function SetupMeter({ stage }) {
   );
 }
 
+/* Pixel Factory 95 pulls in Three.js/R3F (~1MB) — code-split behind a lazy
+   import so every other visitor's initial bundle never pays for it. Only
+   requested the first time the player actually opens the game. */
+const PixelFactoryWindow = lazy(() => import('./game/pixelFactory/PixelFactoryWindow'));
+
 const TB_WINS = [
   { id: 'paint',      Ico: OsPaint,      label: 'Paint',            minStage: 1 },
   { id: 'notepad',    Ico: OsTextEditor, label: 'README.TXT',       minStage: 2 },
@@ -1035,6 +1042,7 @@ const TB_WINS = [
   { id: 'explorer',   Ico: OsFolder,     label: 'Projects',         minStage: 0 },
   { id: 'journey',    Ico: OsProfiler,   label: 'Training Monitor', minStage: 0 },
   { id: 'aiterminal', Ico: OsTerminal,   label: 'AI.TERMINAL',      minStage: 0 },
+  { id: 'pixelfactory', Ico: OsGameFactory, label: 'Pixel Factory 95', minStage: 0 },
 ];
 
 function Win95Taskbar({ clock, onAction, muted, onToggleMute, wins, onWinAction, stage = 3, showMeter = true,
@@ -1375,6 +1383,9 @@ function ScrollToTop() {
 
 export default function FixedComponents({ children }) {
   const os = useOS();
+  const gameOpen = os.wins.pixelfactory?.open;
+  const [gameEverOpened, setGameEverOpened] = useState(false);
+  useEffect(() => { if (gameOpen) setGameEverOpened(true); }, [gameOpen]);
 
   // Mobile keeps its own menu inside the hero, but the shared dialogs are
   //  viewport-agnostic — without them My Computer (About), the dial-up
@@ -1422,6 +1433,16 @@ export default function FixedComponents({ children }) {
           boots disks into it via the shreyos-open-project event and its close
           button auto-ejects Drive A via shreyos-eject-disk. */}
       <ProjectsWindow />
+      {/* Pixel Factory 95 — visibility owned by wins.pixelfactory; unlock
+          milestones inside the game call os.handleAction to open the real
+          Projects/Contact windows or scroll to Skills/Resume. Code-split and
+          only mounted after the first open, so its Three.js payload never
+          loads for a visitor who never launches the game. */}
+      {gameEverOpened && (
+        <Suspense fallback={null}>
+          <PixelFactoryWindow />
+        </Suspense>
+      )}
       <DisplayProperties
         open={os.displayOpen}
         onClose={() => os.setDisplayOpen(false)}

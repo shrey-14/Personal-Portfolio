@@ -11,7 +11,7 @@ import {
 } from 'react';
 import cvHref from './assets/Shrey_Patel_CV.pdf';
 import {
-  OsComputer, OsRecycleBin, OsFolder, OsPdf, OsMail,
+  OsComputer, OsRecycleBin, OsFolder, OsPdf, OsMail, OsGameFactory,
 } from './OsIcons.jsx';
 
 export { cvHref };
@@ -156,6 +156,7 @@ const WIN98 = {
   projects: OsFolder,
   resume:   OsPdf,
   contact:  OsMail,
+  pixelfactory: OsGameFactory,
 };
 
 const DESKTOP_ICONS = [
@@ -164,6 +165,7 @@ const DESKTOP_ICONS = [
   { id: 'projects', label: 'Projects.exe', href: '#projects', dblAction: 'projects' },
   { id: 'resume',   label: 'Resume.pdf',   href: cvHref, download: 'Shrey_Patel_CV.pdf' },
   { id: 'contact',  label: 'Contact.exe',  dblAction: 'contact' },
+  { id: 'pixelfactory', label: 'PixelFactory95.exe', dblAction: 'pixelfactory' },
 ];
 
 function useViewport() {
@@ -246,6 +248,7 @@ export function OSProvider({ children }) {
     explorer:   { open: false, minimized: false },
     journey:    { open: false, minimized: false },
     aiterminal: { open: false, minimized: false },
+    pixelfactory: { open: false, minimized: false },
   });
 
   // Theme + wallpaper (persisted) + Display Properties dialog
@@ -411,6 +414,10 @@ export function OSProvider({ children }) {
     if (action === 'open_project') {
       playClick(); playWindowOpen();
       setWins(w => ({ ...w, explorer: { open: true, minimized: false } }));
+    }
+    if (action === 'pixelfactory') {
+      setCtxMenu(null); playClick(); playWindowOpen();
+      setWins(w => ({ ...w, pixelfactory: { open: true, minimized: false } }));
     }
     if (action === 'recycle')  { setCtxMenu(null); playClick(); setRecycleOpen(true); }
     if (action === 'shutdown') { setCtxMenu(null); playClick(); setShutdownOpen(true); }
